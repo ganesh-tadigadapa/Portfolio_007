@@ -46,6 +46,7 @@ export const projects: Project[] = [
       "Distributed object store in Go with checksum-verified reads, self-healing repair, versioning and configurable partition quorums.",
     tech: ["Go", "Docker"],
     href: "https://github.com/ganesh-tadigadapa/vautify",
+    website: "https://vault-store-865.netlify.app/",
     featured: true,
     gradient: "from-blue-500/25 via-indigo-500/15 to-slate-500/20",
   },
@@ -70,7 +71,7 @@ export const projects: Project[] = [
       "Group expense splitter with AI: scan receipts, add expenses in plain English and ask a chatbot who owes what.",
     tech: ["React", "Node.js", "MongoDB", "Gemini"],
     href: "https://github.com/ganesh-tadigadapa/Splitly",
-    website: "https://ai-split-66al.vercel.app/",
+    website: "https://splitly-pied.vercel.app/",
     gradient: "from-indigo-500/25 via-slate-500/15 to-fuchsia-500/20",
   },
   {
