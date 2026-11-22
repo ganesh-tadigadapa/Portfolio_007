@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
-import { CommandMenu } from "@/components/command-menu";
-import { ThemeProvider } from "@/components/theme-provider";
+import { SiteHeader } from "@/components/layout/site-header";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { CommandMenu } from "@/components/layout/command-menu";
+import { ThemeProvider } from "@/components/layout/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { siteConfig } from "@/config/meta";
-import { PersonJsonLd } from "@/components/person-json-ld";
-import { ScrollReveal } from "@/components/scroll-reveal";
-import { SiteIntro, siteIntroBootScript } from "@/components/site-intro";
+import { PersonJsonLd } from "@/components/shared/person-json-ld";
+import { ScrollReveal } from "@/components/effects/scroll-reveal";
+import { SiteIntro, siteIntroBootScript } from "@/components/effects/site-intro";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -48,7 +48,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           <TooltipProvider>
             <SiteIntro />
-            <div className="relative flex min-h-screen flex-col bg-green-grid">
+            <div className="relative flex min-h-screen flex-col bg-grid">
               <SiteHeader />
               <main className="page-content flex-1">{children}</main>
               <ScrollReveal />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { startEmbers } from "@/lib/embers";
+import { startEmbers } from "@/components/effects/embers";
 
 /**
  * Full-screen intro shown on the first page load of a browser tab.
@@ -11,8 +11,6 @@ import { startEmbers } from "@/lib/embers";
  * A minimum duration means the sequence is always seen, and a failsafe means
  * a slow asset can never hold it open. At 100% it says "Welcome" and wipes
  * upward to reveal the site. Enter / Escape skips it.
- *
- * Ported from ganesh-intro-demo/intros.js (the Portfolio_007 intro loader).
  */
 
 const WORDS: ReadonlyArray<readonly [string, string]> = [
@@ -93,27 +91,27 @@ export function SiteIntro() {
         }),
       );
 
-    function paint([text, mean]: readonly [string, string]) {
+    function paint([text, translation]: readonly [string, string]) {
       kanji.replaceChildren(
-        ...[...text].map((ch, i) => {
-          const s = document.createElement("span");
-          s.textContent = ch;
-          s.style.transitionDelay = `${i * 0.06}s`;
-          return s;
+        ...[...text].map((char, i) => {
+          const span = document.createElement("span");
+          span.textContent = char;
+          span.style.transitionDelay = `${i * 0.06}s`;
+          return span;
         }),
       );
-      meaning.textContent = mean;
+      meaning.textContent = translation;
       reveal();
     }
 
-    let wi = 1;
+    let wordIndex = 1;
     function nextWord() {
       kanji.classList.add("il-gone");
       meaning.classList.remove("il-show");
       later(() => {
         kanji.classList.remove("il-gone", "il-show");
-        paint(WORDS[wi]);
-        wi = (wi + 1) % WORDS.length;
+        paint(WORDS[wordIndex]);
+        wordIndex = (wordIndex + 1) % WORDS.length;
       }, 420);
     }
     reveal(); // the first word is server-rendered hidden; slide it in
@@ -183,8 +181,8 @@ export function SiteIntro() {
         embers.setSource(null);
         const bar = fill.getBoundingClientRect();
         for (let i = 0; i <= 8; i++) embers.burst(bar.left + (bar.width * i) / 8, bar.top, 14, 0.9);
-        const n = num.getBoundingClientRect();
-        embers.burst(n.left + n.width / 2, n.top + n.height * 0.6, 70, 1.3);
+        const digits = num.getBoundingClientRect();
+        embers.burst(digits.left + digits.width / 2, digits.top + digits.height * 0.6, 70, 1.3);
       }
 
       kanji.classList.add("il-gone");
@@ -210,8 +208,8 @@ export function SiteIntro() {
       );
     }
 
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape" || e.key === "Enter") complete();
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape" || event.key === "Enter") complete();
     }
     window.addEventListener("keydown", onKey);
 

@@ -24,10 +24,10 @@ type Spark = {
   life: number;
   size: number;
   sprite: HTMLCanvasElement;
-  wobAmp: number;
-  wobFreq: number;
+  wobbleAmount: number;
+  wobbleSpeed: number;
   phase: number;
-  flick: number;
+  flickerSpeed: number;
 };
 
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
@@ -60,8 +60,8 @@ export function startEmbers(canvas: HTMLCanvasElement) {
   const sprites = SPARK_COLORS.map(makeSprite);
   const sparks: Spark[] = [];
 
-  let W = 0;
-  let H = 0;
+  let width = 0;
+  let height = 0;
   let intensity = 0.15;
   let source: { x: number; y: number } | null = null;
   let ambientAcc = 0;
@@ -70,14 +70,14 @@ export function startEmbers(canvas: HTMLCanvasElement) {
   let last = performance.now();
   let running = true;
 
-  const maxSparks = () => (W < 640 ? 260 : 520);
+  const maxSparks = () => (width < 640 ? 260 : 520);
 
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = canvas.clientWidth;
-    H = canvas.clientHeight;
-    canvas.width = Math.round(W * dpr);
-    canvas.height = Math.round(H * dpr);
+    width = canvas.clientWidth;
+    height = canvas.clientHeight;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
@@ -85,8 +85,8 @@ export function startEmbers(canvas: HTMLCanvasElement) {
   function spawnAmbient() {
     if (sparks.length >= maxSparks()) return;
     sparks.push({
-      x: W / 2 + gauss() * W * 0.48,
-      y: H * rand(0.9, 1.04),
+      x: width / 2 + gauss() * width * 0.48,
+      y: height * rand(0.9, 1.04),
       vx: rand(-12, 12),
       vy: -rand(40, 110) * (0.8 + intensity * 0.6),
       lift: rand(6, 18),
@@ -95,10 +95,10 @@ export function startEmbers(canvas: HTMLCanvasElement) {
       life: rand(2, 4.6),
       size: rand(0.8, 2.5),
       sprite: sprites[(Math.random() * sprites.length) | 0],
-      wobAmp: rand(8, 26),
-      wobFreq: rand(0.7, 2.4),
+      wobbleAmount: rand(8, 26),
+      wobbleSpeed: rand(0.7, 2.4),
       phase: rand(0, Math.PI * 2),
-      flick: rand(7, 18),
+      flickerSpeed: rand(7, 18),
     });
   }
 
@@ -118,10 +118,10 @@ export function startEmbers(canvas: HTMLCanvasElement) {
       life: rand(0.6, 1.6),
       size: rand(0.7, 2.4),
       sprite: sprites[(Math.random() * 3) | 0], // hottest colours
-      wobAmp: rand(4, 12),
-      wobFreq: rand(1, 3),
+      wobbleAmount: rand(4, 12),
+      wobbleSpeed: rand(1, 3),
       phase: rand(0, Math.PI * 2),
-      flick: rand(10, 24),
+      flickerSpeed: rand(10, 24),
     });
   }
 
@@ -129,10 +129,10 @@ export function startEmbers(canvas: HTMLCanvasElement) {
     if (!running) return;
     const dt = Math.min(0.05, (now - last) / 1000); // clamp after tab switches
     last = now;
-    ctx.clearRect(0, 0, W, H);
+    ctx.clearRect(0, 0, width, height);
 
     // the fire burns harder as intensity rises
-    ambientAcc += Math.max(14, (W / 1440) * 85) * (0.5 + intensity * 1.4) * dt;
+    ambientAcc += Math.max(14, (width / 1440) * 85) * (0.5 + intensity * 1.4) * dt;
     while (ambientAcc >= 1) {
       spawnAmbient();
       ambientAcc -= 1;
@@ -147,33 +147,33 @@ export function startEmbers(canvas: HTMLCanvasElement) {
 
     ctx.globalCompositeOperation = "lighter";
     for (let i = sparks.length - 1; i >= 0; i--) {
-      const p = sparks[i];
-      p.age += dt;
-      if (p.age >= p.life || p.y < -30) {
+      const spark = sparks[i];
+      spark.age += dt;
+      if (spark.age >= spark.life || spark.y < -30) {
         sparks[i] = sparks[sparks.length - 1];
         sparks.pop();
         continue;
       }
-      if (p.drag) {
-        const k = Math.exp(-p.drag * dt);
-        p.vx *= k;
-        p.vy *= k;
+      if (spark.drag) {
+        const slowdown = Math.exp(-spark.drag * dt);
+        spark.vx *= slowdown;
+        spark.vy *= slowdown;
       }
-      p.vy -= p.lift * dt; // heat keeps pushing sparks upward
-      p.x += (p.vx + Math.sin(p.age * p.wobFreq + p.phase) * p.wobAmp) * dt;
-      p.y += p.vy * dt;
+      spark.vy -= spark.lift * dt; // heat keeps pushing sparks upward
+      spark.x += (spark.vx + Math.sin(spark.age * spark.wobbleSpeed + spark.phase) * spark.wobbleAmount) * dt;
+      spark.y += spark.vy * dt;
 
-      const t = p.age / p.life;
-      const fadeIn = Math.min(1, p.age / 0.15);
-      const fadeOut = Math.pow(1 - t, 1.4);
-      let flicker = 0.62 + 0.38 * Math.sin(p.age * p.flick + p.phase);
+      const lifeUsed = spark.age / spark.life; // 0 → 1
+      const fadeIn = Math.min(1, spark.age / 0.15);
+      const fadeOut = Math.pow(1 - lifeUsed, 1.4);
+      let flicker = 0.62 + 0.38 * Math.sin(spark.age * spark.flickerSpeed + spark.phase);
       if (Math.random() < 0.025) flicker *= 0.25; // the odd sputter
       const alpha = fadeIn * fadeOut * flicker;
       if (alpha <= 0.01) continue;
 
-      const s = p.size * 9 * (0.7 + 0.3 * (1 - t)); // sparks shrink as they cool
+      const drawSize = spark.size * 9 * (0.7 + 0.3 * (1 - lifeUsed)); // sparks shrink as they cool
       ctx.globalAlpha = alpha;
-      ctx.drawImage(p.sprite, p.x - s / 2, p.y - s / 2, s, s);
+      ctx.drawImage(spark.sprite, spark.x - drawSize / 2, spark.y - drawSize / 2, drawSize, drawSize);
     }
     ctx.globalAlpha = 1;
     raf = requestAnimationFrame(frame);
@@ -194,10 +194,10 @@ export function startEmbers(canvas: HTMLCanvasElement) {
   // pre-warm so sparks are already mid-flight on the first frame
   for (let i = 0; i < 18; i++) {
     spawnAmbient();
-    const p = sparks[sparks.length - 1];
-    if (p) {
-      p.age = rand(0.3, p.life * 0.6);
-      p.y = rand(H * 0.45, H);
+    const spark = sparks[sparks.length - 1];
+    if (spark) {
+      spark.age = rand(0.3, spark.life * 0.6);
+      spark.y = rand(height * 0.45, height);
     }
   }
   raf = requestAnimationFrame(frame);
