@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { ArrowRight, GithubLogo, Globe } from "@phosphor-icons/react/dist/ssr";
-import { Container } from "@/components/container";
-import { SectionHeading } from "@/components/section-heading";
+import { Container } from "@/components/layout/container";
+import { SectionHeading } from "@/components/shared/section-heading";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass";
-import { ProjectCover } from "@/components/project-cover";
-import { TechIcon, techTileClass } from "@/components/tech-icon";
+import { ProjectCover } from "@/components/projects/project-cover";
+import { TechIcon, techTileClass } from "@/components/shared/tech-icon";
 import { projects, type Project } from "@/config/projects";
 import { getTechIcon } from "@/lib/tech-icons";
 
