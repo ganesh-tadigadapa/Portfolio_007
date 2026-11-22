@@ -44,6 +44,28 @@ Almost everything lives in `src/config/`:
 - **Long project write-ups (optional):** add `content/projects/<slug>.mdx` with `title`, `description`, `date` and `tech` front matter.
 - **Tech icons:** come from [Simple Icons](https://simpleicons.org/). Map new names in `src/lib/tech-icons.ts`.
 
+## Where things are
+
+```
+src/
+├── app/                  pages (Next.js App Router)
+│   ├── page.tsx          home
+│   ├── about/            about page
+│   ├── projects/         projects list + [slug] detail page
+│   └── api/visitors/     visitor counter endpoint
+├── components/
+│   ├── layout/           header, footer, command palette, theme toggle, page container
+│   ├── home/             home page sections: hero, tech stack, GitHub graph, quote card
+│   ├── projects/         project cards and covers
+│   ├── effects/          loading intro (with ember sparks) and scroll animations
+│   ├── shared/           small pieces used on several pages
+│   └── ui/               base UI: button, tooltip, glass card
+├── config/               all the content (see above)
+└── lib/                  helpers: metadata, MDX loader, GitHub data, visitor storage
+```
+
+Styles, theme colours and the intro's CSS are in `src/app/globals.css`.
+
 ## Visitor counter
 
 Locally the count is stored in `data/visitors.json`. Serverless hosts like Vercel have a read-only filesystem, so in production add an [Upstash Redis](https://upstash.com/) database and set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. Without them the card just says "Thanks for visiting."
