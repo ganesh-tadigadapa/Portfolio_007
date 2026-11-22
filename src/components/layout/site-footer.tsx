@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { EnvelopeSimple, GithubLogo, LinkedinLogo } from "@phosphor-icons/react/dist/ssr";
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 import { siteConfig } from "@/config/meta";
 
 const footerSocial = [
