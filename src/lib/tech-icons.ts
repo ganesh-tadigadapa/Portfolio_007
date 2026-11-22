@@ -1,4 +1,6 @@
-export const techIconMap: Record<string, string> = {
+// Maps a technology name (as written in src/config) to its logo: a Simple Icons
+// slug (https://simpleicons.org) or a file in /public.
+const techIconMap: Record<string, string> = {
   TypeScript: "typescript",
   JavaScript: "javascript",
   CSS: "css",
@@ -15,7 +17,6 @@ export const techIconMap: Record<string, string> = {
   PostgreSQL: "postgresql",
   MongoDB: "mongodb",
   FAISS: "meta",
-  ChromaDB: "/assets/chromadb.png",
   Cloudflare: "cloudflare",
   Vercel: "vercel",
   Postman: "postman",

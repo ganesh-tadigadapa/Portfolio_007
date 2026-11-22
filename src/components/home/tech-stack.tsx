@@ -3,11 +3,12 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 
-const TechStackSection = dynamic(() =>
-  import("./tech-stack-section").then((module) => module.TechStackSection),
+// The icon grid (and its tooltips) is only downloaded when it's about to scroll into view.
+const TechStackGrid = dynamic(() =>
+  import("./tech-stack-grid").then((module) => module.TechStackGrid),
 );
 
-export function LazyTechStack() {
+export function TechStack() {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -34,7 +35,7 @@ export function LazyTechStack() {
   return (
     <div ref={ref} style={{ minHeight: 160 }}>
       {visible ? (
-        <TechStackSection />
+        <TechStackGrid />
       ) : (
         <div className="mx-auto max-w-3xl px-4" aria-label="Loading tech stack">
           <div className="h-4 w-24 rounded bg-muted" />
