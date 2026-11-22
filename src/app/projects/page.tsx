@@ -1,5 +1,5 @@
-import { Container } from "@/components/container";
-import { ProjectsGrid } from "@/components/projects-grid";
+import { Container } from "@/components/layout/container";
+import { ProjectsGrid } from "@/components/projects/projects-grid";
 import { projects } from "@/config/projects";
 import { createPageMetadata, pageTitle } from "@/lib/metadata";
 

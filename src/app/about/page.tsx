@@ -4,8 +4,8 @@ import {
   GithubLogo,
   LinkedinLogo,
 } from "@phosphor-icons/react/dist/ssr";
-import { Container } from "@/components/container";
-import { HighlightedText } from "@/components/highlighted-text";
+import { Container } from "@/components/layout/container";
+import { HighlightedText } from "@/components/shared/highlighted-text";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass";
 import { aboutConfig } from "@/config/about";
 import { createPageMetadata, pageTitle } from "@/lib/metadata";

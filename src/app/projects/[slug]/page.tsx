@@ -6,10 +6,10 @@ import {
   ArrowUpRight,
   GithubLogo,
 } from "@phosphor-icons/react/dist/ssr";
-import { Container } from "@/components/container";
-import { MdxContent } from "@/components/mdx-content";
-import { ProjectCover } from "@/components/project-cover";
-import { TechIcon } from "@/components/tech-icon";
+import { Container } from "@/components/layout/container";
+import { MdxContent } from "@/components/shared/mdx-content";
+import { ProjectCover } from "@/components/projects/project-cover";
+import { TechIcon } from "@/components/shared/tech-icon";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass";
 import { projects } from "@/config/projects";
 import { getProjectPost, getProjectPosts } from "@/lib/mdx";
