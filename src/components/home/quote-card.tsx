@@ -1,33 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Container } from "@/components/container";
+import { Container } from "@/components/layout/container";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass";
 import { quoteConfig } from "@/config/quote";
-import { getOrdinalSuffix } from "@/lib/ordinal";
 
-export function QuoteVisitorCard() {
+/** "st", "nd", "rd" or "th" for a number: 1st, 2nd, 3rd, 11th, 21st... */
+function ordinalSuffix(n: number) {
+  const lastTwo = n % 100;
+  if (lastTwo >= 11 && lastTwo <= 13) return "th";
+  return ["th", "st", "nd", "rd"][n % 10] ?? "th";
+}
+
+export function QuoteCard() {
   const [count, setCount] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    const key = "visitor-counted";
-    const alreadyCounted = sessionStorage.getItem(key);
+    // Count each visitor once per browser tab; after that, just read the total.
+    const COUNTED_KEY = "visitor-counted";
+    const isNewVisit = !sessionStorage.getItem(COUNTED_KEY);
 
     const load = async () => {
       try {
-        if (!alreadyCounted) {
-          const res = await fetch("/api/visitors", { method: "POST" });
-          if (!res.ok) throw new Error("count failed");
-          const data = (await res.json()) as { count: number };
-          sessionStorage.setItem(key, "true");
-          setCount(data.count);
-          return;
-        }
-
-        const res = await fetch("/api/visitors");
+        const res = await fetch("/api/visitors", { method: isNewVisit ? "POST" : "GET" });
         if (!res.ok) throw new Error("count failed");
         const data = (await res.json()) as { count: number };
+        if (isNewVisit) sessionStorage.setItem(COUNTED_KEY, "true");
         setCount(data.count);
       } catch {
         setFailed(true);
@@ -67,7 +66,7 @@ export function QuoteVisitorCard() {
                 <span>
                   You&apos;re the{" "}
                   <strong className="font-semibold text-foreground">{count.toLocaleString()}</strong>
-                  <sup className="ml-0.5 text-[10px]">{getOrdinalSuffix(count)}</sup> visitor
+                  <sup className="ml-0.5 text-[10px]">{ordinalSuffix(count)}</sup> visitor
                 </span>
               ) : failed ? (
                 <span>Thanks for visiting</span>

@@ -12,10 +12,10 @@ import {
   SealCheck,
   XLogo,
 } from "@phosphor-icons/react";
-import { ProfileAvatar } from "@/components/profile-avatar";
-import { Container } from "@/components/container";
-import { RotatingTitle } from "@/components/landing/rotating-title";
-import { TimezoneWidget } from "@/components/landing/timezone-widget";
+import { ProfileAvatar } from "@/components/shared/profile-avatar";
+import { Container } from "@/components/layout/container";
+import { RotatingTitle } from "@/components/home/rotating-title";
+import { TimezoneWidget } from "@/components/home/timezone-widget";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { heroConfig, socialLinks } from "@/config/hero";
 

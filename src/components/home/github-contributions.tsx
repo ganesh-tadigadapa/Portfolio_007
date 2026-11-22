@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Container } from "@/components/container";
-import { SectionHeading } from "@/components/section-heading";
+import { Container } from "@/components/layout/container";
+import { SectionHeading } from "@/components/shared/section-heading";
 import { siteConfig } from "@/config/meta";
 import {
   getGitHubContributions,
