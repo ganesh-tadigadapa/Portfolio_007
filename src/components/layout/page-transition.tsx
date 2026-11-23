@@ -15,8 +15,9 @@ import { useEffect, useRef, useState, type ComponentProps, type MouseEvent } fro
  *   reveal  the panel carries on out, its trailing edge bulging into a curve
  *
  * Going forward in the nav (Home → About → Projects) wipes upward; going back wipes
- * downward. The panel is the theme inverted (light on dark mode, dark on light mode),
- * like the monochrome theme toggle. Everything that moves is transform/opacity only,
+ * downward. The panel matches the theme (deep graphite with a soft top glow in dark
+ * mode, warm white in light mode), and the page itself moves with it: the old page
+ * drifts away under the panel and the new one glides in as it pulls off. Everything that moves is transform/opacity only,
  * so the GPU composites it and frames stay steady.
  * Reduced motion: a plain instant navigation.
  */
@@ -55,6 +56,9 @@ export function PageTransitionListener() {
       const to = ROUTES[href] ?? { label: "", index: 9 };
       const from = ROUTES[pathRef.current]?.index ?? 0;
       waitingFor.current = href;
+      const html = document.documentElement;
+      html.classList.toggle("pt-back", !(to.index >= from));
+      html.classList.add("pt-leaving");
       router.prefetch(href); // have the page ready by the time the screen is covered
       setActive({ href, ...to, dir: to.index >= from ? 1 : -1, stage: "cover", id: Date.now() });
       later(() => {
@@ -64,6 +68,7 @@ export function PageTransitionListener() {
       later(() => {
         if (waitingFor.current === href) {
           waitingFor.current = null;
+          document.documentElement.classList.remove("pt-leaving", "pt-enter-from", "pt-back");
           setActive((a) => (a ? { ...a, stage: "reveal" } : a));
         }
       }, 3200);
@@ -80,8 +85,18 @@ export function PageTransitionListener() {
     if (!waitingFor.current || pathname !== waitingFor.current) return;
     waitingFor.current = null;
     window.scrollTo(0, 0);
+    const html = document.documentElement;
+    // Park the new page just off its resting place (no transition) while still covered.
+    html.classList.remove("pt-leaving");
+    html.classList.add("pt-enter-from");
     const wait = Math.max(0, HOLD_MS - (Date.now() - coveredAt.current));
-    later(() => setActive((a) => (a ? { ...a, stage: "reveal" } : a)), wait);
+    later(() => {
+      setActive((a) => (a ? { ...a, stage: "reveal" } : a));
+      // …then let it glide home as the panel pulls away.
+      html.classList.add("pt-entering");
+      requestAnimationFrame(() => html.classList.remove("pt-enter-from"));
+      later(() => html.classList.remove("pt-entering", "pt-back"), REVEAL_S * 1000 + 200);
+    }, wait);
   }, [pathname]);
 
   useEffect(() => {
@@ -105,7 +120,7 @@ function Wipe({ a, onDone }: { a: Active; onDone: () => void }) {
   return (
     <div aria-hidden data-lenis-prevent className="fixed inset-0 z-[200] overflow-hidden">
       <motion.div
-        className="absolute inset-0 bg-foreground text-background"
+        className="pt-panel absolute inset-0"
         style={{ willChange: "transform" }}
         initial={{ y: from }}
         animate={{ y: covering ? "0%" : to }}
@@ -114,7 +129,7 @@ function Wipe({ a, onDone }: { a: Active; onDone: () => void }) {
       >
         {/* Leading curve: bulges out ahead of the panel, flattens as it lands. */}
         <motion.div
-          className="absolute left-[-25%] h-[24vh] w-[150%] rounded-[50%] bg-foreground"
+          className="pt-curve absolute left-[-25%] h-[24vh] w-[150%] rounded-[50%]"
           style={{ [up ? "top" : "bottom"]: "-12vh", willChange: "transform" }}
           initial={{ scaleY: 1 }}
           animate={{ scaleY: 0 }}
@@ -122,7 +137,7 @@ function Wipe({ a, onDone }: { a: Active; onDone: () => void }) {
         />
         {/* Trailing curve: grows as the panel pulls away on the reveal. */}
         <motion.div
-          className="absolute left-[-25%] h-[24vh] w-[150%] rounded-[50%] bg-foreground"
+          className="pt-curve absolute left-[-25%] h-[24vh] w-[150%] rounded-[50%]"
           style={{ [up ? "bottom" : "top"]: "-12vh", willChange: "transform" }}
           initial={{ scaleY: 0 }}
           animate={{ scaleY: covering ? 0 : 1 }}
