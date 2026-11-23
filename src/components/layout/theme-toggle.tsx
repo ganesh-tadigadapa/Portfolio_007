@@ -8,8 +8,8 @@ import { playThemeClickSound } from "@/lib/theme-click-sound";
 import { cn } from "@/lib/utils";
 
 /**
- * Theme switch with a diagonal light-sweep: the new theme pours across the screen
- * from the button's corner with a wide, soft edge (View Transitions API). Browsers without it,
+ * Theme switch with a diagonal sweep: the new theme slides across the screen with a
+ * soft edge (View Transitions API). Browsers without it,
  * and people who prefer reduced motion, get an instant switch.
  */
 export function ThemeToggle({ className }: { className?: string }) {
@@ -24,36 +24,14 @@ export function ThemeToggle({ className }: { className?: string }) {
     const next = resolvedTheme === "dark" ? "light" : "dark";
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!document.startViewTransition || reduceMotion || !button.current) {
+    if (!document.startViewTransition || reduceMotion) {
       setTheme(next);
       return;
     }
 
-    // Sweep away from the button: from the top-right corner it pours down and left.
-    const { left, top, width, height } = button.current.getBoundingClientRect();
-    const fromRight = left + width / 2 > innerWidth / 2;
-    const fromBottom = top + height / 2 > innerHeight / 2;
-    document.documentElement.style.setProperty(
-      "--wipe-dir",
-      `to ${fromBottom ? "top" : "bottom"} ${fromRight ? "left" : "right"}`,
-    );
-
-    const transition = document.startViewTransition(() => {
+    // The sweep itself is pure CSS (globals.css); just swap the theme inside the transition.
+    document.startViewTransition(() => {
       flushSync(() => setTheme(next));
-    });
-
-    transition.ready.then(() => {
-      // --wipe is the middle of the soft edge along the diagonal: from fully before the
-      // page (-30%) to fully past it (130%). See globals.css.
-      document.documentElement.animate(
-        { "--wipe": ["-30%", "130%"] } as PropertyIndexedKeyframes,
-        {
-          duration: 900,
-          easing: "cubic-bezier(0.65, 0, 0.35, 1)",
-          pseudoElement: "::view-transition-new(root)",
-          fill: "both",
-        },
-      );
     });
   };
 

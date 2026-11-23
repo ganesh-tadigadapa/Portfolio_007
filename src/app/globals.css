@@ -479,32 +479,42 @@ html.intro-lock body {
   }
 }
 
-/* Theme toggle reveal (driven from theme-toggle.tsx). The new theme floods in
-   diagonally from the toggle's corner with a very wide, soft edge, like light pouring
-   across the page; the old view stays still underneath. JS animates --wipe and sets
-   --wipe-dir (e.g. "to bottom left" when the button is top-right). */
-@property --wipe {
-  syntax: "<percentage>";
-  inherits: false;
-  initial-value: 0%;
+/* Theme toggle reveal: the new theme sweeps diagonally across the page with a soft
+   edge. The mask is a gradient three times the size of the page (opaque 35%, half at
+   50%, clear 65%) slid from one corner to the other at a constant speed. The old view
+   stays still underneath. Same effect in both directions. */
+:root {
+  --wipe-duration: 0.75s;
+}
+::view-transition-group(root) {
+  animation-duration: var(--wipe-duration);
+  animation-timing-function: linear;
 }
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation: none;
   mix-blend-mode: normal;
 }
 ::view-transition-old(root) {
   z-index: 1;
+  animation: none;
 }
 ::view-transition-new(root) {
   z-index: 2;
-  --wipe: -30%;
-  mask-image: linear-gradient(
-    var(--wipe-dir, to bottom left),
-    #000 calc(var(--wipe) - 30%),
-    rgb(0 0 0 / 0.6) var(--wipe),
-    transparent calc(var(--wipe) + 30%)
-  );
+  animation: theme-sweep var(--wipe-duration) linear forwards;
+  mask-image: linear-gradient(to bottom right, #000 35%, rgb(0 0 0 / 0.5) 50%, transparent 65%);
+  mask-size: 300% 300%;
+  mask-repeat: no-repeat;
+}
+@keyframes theme-sweep {
+  from { mask-position: 100% 100%; }
+  to { mask-position: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
 }
 
 /* Sun/moon swap: the new icon spins and grows in. */
