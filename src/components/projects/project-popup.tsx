@@ -23,7 +23,8 @@ import { cn } from "@/lib/utils";
 /**
  * A project popup shared by any set of cards. Wrap the cards in <ProjectPopupRoot> and
  * each card in <PopupTrigger project={...}>:
- *  - mouse: resting on a card opens the popup; moving off the popup closes it
+ *  - mouse: moving onto a card and resting there opens the popup (cards that merely
+ *    scroll under a still cursor don't count); moving off the popup closes it
  *  - click / tap / Enter: opens it too (links inside the card still work)
  *  - Escape, the ✕ or a click outside close it
  *
@@ -48,6 +49,23 @@ export function ProjectPopupRoot({ children }: { children: ReactNode }) {
   const openTimer = useRef<number | undefined>(undefined);
   const closeTimer = useRef<number | undefined>(undefined);
   const closedAt = useRef(0);
+  const scrolledAt = useRef(0);
+  const pending = useRef<string | null>(null);
+
+  // Scrolling moves cards under a still cursor; that must not count as hovering.
+  useEffect(() => {
+    const onScroll = () => {
+      scrolledAt.current = Date.now();
+      window.clearTimeout(openTimer.current);
+      pending.current = null;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("wheel", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("wheel", onScroll);
+    };
+  }, []);
 
   useEffect(() => setMounted(true), []);
 
@@ -61,12 +79,23 @@ export function ProjectPopupRoot({ children }: { children: ReactNode }) {
   const ctx = useMemo<Ctx>(
     () => ({
       hoverStart: (p) => {
+        // Ignore while (or just after) the page is scrolling, and don't restart a
+        // timer that is already counting down for this card.
+        if (Date.now() - scrolledAt.current < 350) return;
+        if (pending.current === p.slug) return;
         window.clearTimeout(openTimer.current);
+        pending.current = p.slug;
         // Just closed? Let the close finish first so it never flickers.
         const settle = Math.max(0, 260 - (Date.now() - closedAt.current));
-        openTimer.current = window.setTimeout(() => setOpen(p), OPEN_DELAY + settle);
+        openTimer.current = window.setTimeout(() => {
+          pending.current = null;
+          setOpen(p);
+        }, OPEN_DELAY + settle);
       },
-      hoverEnd: () => window.clearTimeout(openTimer.current),
+      hoverEnd: () => {
+        window.clearTimeout(openTimer.current);
+        pending.current = null;
+      },
       openNow: (p) => {
         window.clearTimeout(openTimer.current);
         setOpen(p);
@@ -139,7 +168,12 @@ export function PopupTrigger({
   return (
     <div
       className={className}
-      onPointerEnter={(e) => e.pointerType === "mouse" && ctx.hoverStart(project)}
+      // Real mouse movement over the card starts the timer (a card scrolling under a
+      // still cursor fires enter events but no movement).
+      onPointerMove={(e) => {
+        if (e.pointerType !== "mouse" || (e.movementX === 0 && e.movementY === 0)) return;
+        ctx.hoverStart(project);
+      }}
       onPointerLeave={ctx.hoverEnd}
       onClick={(e) => {
         if (!clickToOpen) return;
