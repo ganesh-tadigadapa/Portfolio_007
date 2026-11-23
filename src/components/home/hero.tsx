@@ -40,13 +40,23 @@ export function Hero() {
           className="relative h-[calc(var(--grid-cell-size)*4.5)]"
         >
           <div className="relative size-full overflow-hidden rounded-2xl border border-foreground/10 shadow-[0_8px_30px_-12px_rgb(0_0_0/0.45)]">
+          {/* Temporary banner trial (previous: /assets/header.jpeg). The whole image is
+              shown, with a blurred, darkened copy of itself filling the sides. */}
           <Image
-            src="/assets/header.jpeg"
+            src="/assets/header-anime.jpg"
+            alt=""
+            aria-hidden
+            fill
+            sizes="(max-width: 640px) 100vw, 720px"
+            className="scale-110 object-cover blur-xl brightness-[0.55]"
+          />
+          <Image
+            src="/assets/header-anime.jpg"
             alt="Header banner"
             fill
             priority
             sizes="(max-width: 640px) 100vw, 720px"
-            className="hero-parallax object-cover"
+            className="hero-parallax object-contain"
           />
           <div className="absolute inset-0 bg-black/10" />
           </div>
