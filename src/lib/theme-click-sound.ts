@@ -1,12 +1,58 @@
 /**
- * UI sounds, synthesised with Web Audio (no files to load), plus a site-wide on/off
- * switch that is remembered per visitor.
+ * UI sounds, synthesised with Web Audio (no files), plus a site-wide sound switch that
+ * is remembered per visitor. The same switch also mutes the song card.
+ *
+ * Each sound is a small recipe of layers: short filtered-noise bursts (clicks) and
+ * sine tones, run through a gentle compressor. The theme toggle is a crisp two-part
+ * switch click: a lower burst, then a brighter one 24 ms later.
  */
 
-let audioContext: AudioContext | null = null;
+type Layer =
+  | {
+      kind: "noise";
+      filter: BiquadFilterType;
+      freq: number;
+      q: number;
+      offset?: number;
+      attack: number;
+      decay: number;
+      peak: number;
+    }
+  | {
+      kind: "tone";
+      wave: OscillatorType;
+      freq: number;
+      glideTo?: number;
+      offset?: number;
+      attack: number;
+      decay: number;
+      peak: number;
+    };
+
+const RECIPES = {
+  toggle: {
+    gain: 0.4,
+    layers: [
+      { kind: "noise", filter: "bandpass", freq: 2200, q: 1.6, attack: 0.001, decay: 0.016, peak: 0.12 },
+      { kind: "noise", filter: "bandpass", freq: 3800, q: 1.6, offset: 0.024, attack: 0.001, decay: 0.02, peak: 0.1 },
+    ],
+  },
+  tick: {
+    gain: 0.4,
+    layers: [
+      { kind: "noise", filter: "bandpass", freq: 5400, q: 1.8, attack: 0.001, decay: 0.018, peak: 0.14 },
+      { kind: "tone", wave: "sine", freq: 2600, attack: 0.001, decay: 0.012, peak: 0.018 },
+    ],
+  },
+} satisfies Record<string, { gain: number; layers: Layer[] }>;
+
+type SoundName = keyof typeof RECIPES;
 
 const STORAGE_KEY = "ui-sound";
 const EVENT = "ui-sound-change";
+
+let ctx: AudioContext | null = null;
+let bus: GainNode | null = null;
 
 export function isSoundOn(): boolean {
   if (typeof window === "undefined") return true;
@@ -31,73 +77,84 @@ export function onSoundChange(fn: () => void) {
   return () => window.removeEventListener(EVENT, fn);
 }
 
-function context(): AudioContext {
-  audioContext ??= new AudioContext();
-  if (audioContext.state === "suspended") void audioContext.resume();
-  return audioContext;
+function output(c: AudioContext): GainNode {
+  if (bus) return bus;
+  // Boost then compress, so tiny clicks are audible without ever clipping.
+  const boost = c.createGain();
+  boost.gain.value = 4;
+  const comp = c.createDynamicsCompressor();
+  comp.threshold.value = -8;
+  comp.knee.value = 6;
+  comp.ratio.value = 12;
+  comp.attack.value = 0.002;
+  comp.release.value = 0.08;
+  boost.connect(comp).connect(c.destination);
+  bus = boost;
+  return boost;
 }
 
-/**
- * The theme switch: a soft glassy shimmer that rises and fades over about the same
- * time as the screen sweep. A few bell-like sine partials, slightly detuned, each
- * entering a moment after the last, so it feels like it spreads.
- */
-export function playThemeClickSound() {
+function render(c: AudioContext, name: SoundName) {
+  const recipe = RECIPES[name];
+  const master = c.createGain();
+  master.gain.value = recipe.gain;
+  master.connect(output(c));
+  const now = c.currentTime;
+
+  for (const layer of recipe.layers as Layer[]) {
+    const t = now + (layer.offset ?? 0);
+    const env = c.createGain();
+    env.gain.setValueAtTime(0.0001, t);
+    env.gain.exponentialRampToValueAtTime(layer.peak, t + layer.attack);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + layer.attack + layer.decay);
+    env.connect(master);
+    const length = layer.attack + layer.decay + 0.05;
+
+    if (layer.kind === "tone") {
+      const osc = c.createOscillator();
+      osc.type = layer.wave;
+      osc.frequency.setValueAtTime(layer.freq, t);
+      if (layer.glideTo) {
+        osc.frequency.exponentialRampToValueAtTime(layer.glideTo, t + layer.attack + layer.decay);
+      }
+      osc.connect(env);
+      osc.start(t);
+      osc.stop(t + length);
+    } else {
+      const frames = Math.max(1, Math.floor(length * c.sampleRate));
+      const buffer = c.createBuffer(1, frames, c.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < frames; i++) data[i] = Math.random() * 2 - 1;
+      const src = c.createBufferSource();
+      src.buffer = buffer;
+      const filter = c.createBiquadFilter();
+      filter.type = layer.filter;
+      filter.frequency.value = layer.freq;
+      filter.Q.value = layer.q;
+      src.connect(filter).connect(env);
+      src.start(t);
+      src.stop(t + length);
+    }
+  }
+  window.setTimeout(() => master.disconnect(), 400);
+}
+
+export function playSound(name: SoundName) {
   if (typeof window === "undefined" || !isSoundOn()) return;
   try {
-    const ctx = context();
-    const now = ctx.currentTime;
-    const master = ctx.createGain();
-    master.gain.value = 0.16;
-    master.connect(ctx.destination);
-
-    // Partials of a struck glass, staggered to "spread" with the sweep.
-    const partials: [number, number, number][] = [
-      // [frequency Hz, start delay s, relative level]
-      [1318.5, 0.0, 0.5],
-      [1975.5, 0.05, 0.35],
-      [2637.0, 0.11, 0.22],
-      [3520.0, 0.18, 0.12],
-    ];
-    for (const [freq, delay, level] of partials) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const t = now + delay;
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, t);
-      osc.detune.setValueAtTime((Math.random() - 0.5) * 8, t);
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(level, t + 0.008);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.75);
-      osc.connect(gain);
-      gain.connect(master);
-      osc.start(t);
-      osc.stop(t + 0.8);
-    }
+    ctx ??= new AudioContext();
+    if (ctx.state === "running") render(ctx, name);
+    else void ctx.resume().then(() => ctx && render(ctx, name));
   } catch {
     // Audio blocked: stay silent.
   }
 }
 
-/** A tiny tick, used to confirm the sound switch itself turning on. */
+/** Theme switch click. */
+export function playThemeClickSound() {
+  playSound("toggle");
+}
+
+/** Small tick, e.g. confirming sounds were turned back on. */
 export function playTick() {
-  if (typeof window === "undefined" || !isSoundOn()) return;
-  try {
-    const ctx = context();
-    const now = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(1800, now);
-    osc.frequency.exponentialRampToValueAtTime(900, now + 0.04);
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.08, now + 0.004);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.07);
-  } catch {
-    // ignore
-  }
+  playSound("tick");
 }

@@ -69,7 +69,7 @@ export async function GitHubContributions() {
   const yearRange = getYearRange(data.contributions);
   const gridWidth = weeks.length * WEEK_STEP;
   const food = weeks.flatMap((week, x) =>
-    week.flatMap((day, y) => (day.level > 0 ? [{ x, y }] : [])),
+    week.flatMap((day, y) => (day.level > 0 ? [{ x, y, level: day.level }] : [])),
   );
 
   return (
@@ -128,6 +128,7 @@ export async function GitHubContributions() {
                 cell={CELL}
                 gap={GAP}
                 emptyClass={levelColors[0]!}
+                levelClasses={levelColors}
               />
             </div>
           </div>

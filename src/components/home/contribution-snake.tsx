@@ -3,21 +3,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 /**
- * A thin trace that glides over the contribution grid and "eats" the filled squares,
- * nearest first. Eaten squares fade to empty; once everything is eaten the trace leaves
- * on the right, the grid fades back in, and it starts again.
+ * "Your commits are the snake": a small head glides over the contribution grid, and
+ * every filled square it reaches lifts off the grid and joins its body, keeping its own
+ * shade. The body is therefore a train of real contribution days. At the end it leaves
+ * on the right, the squares settle back into the grid, and it starts again.
  *
- * Decorative overlay on top of the server-rendered grid: nothing underneath changes.
- * The line is drawn as one SVG path updated every frame (no React render per frame),
- * so motion is continuous rather than square-by-square. Runs only while on screen and
- * never with reduced motion.
+ * Decorative overlay; the server-rendered grid underneath never changes. Positions are
+ * written straight to the DOM each frame (no React render per frame). Runs only while
+ * on screen, never with reduced motion.
  */
 
+type Food = { x: number; y: number; level: number };
 type Point = { x: number; y: number };
 
-const SPEED = 11; // squares per second
-const LENGTH = 5.5; // trace length, in squares
-const REST_MS = 1600; // pause on the full grid between runs
+const SPEED = 9; // squares per second
+const SPACING = 1; // squares between body segments
+const MAX_BODY = 18; // segments shown; older ones drop back off the tail
+const REST_MS = 1800;
 
 function walk(from: Point, to: Point): Point[] {
   const out: Point[] = [];
@@ -33,10 +35,9 @@ function walk(from: Point, to: Point): Point[] {
   return out;
 }
 
-/** Enter from the left, always head for the nearest remaining square, exit right. */
 function planRoute(food: Point[], columns: number): Point[] {
   const left = [...food];
-  const start: Point = { x: -Math.ceil(LENGTH) - 1, y: 3 };
+  const start: Point = { x: -2, y: 3 };
   let head = start;
   const route: Point[] = [start];
   while (left.length) {
@@ -53,7 +54,7 @@ function planRoute(food: Point[], columns: number): Point[] {
     route.push(...walk(head, target));
     head = target;
   }
-  route.push(...walk(head, { x: columns + Math.ceil(LENGTH) + 1, y: head.y }));
+  route.push(...walk(head, { x: columns + MAX_BODY * SPACING + 2, y: head.y }));
   return route;
 }
 
@@ -63,30 +64,36 @@ export function ContributionSnake({
   cell,
   gap,
   emptyClass,
+  levelClasses,
 }: {
-  food: Point[];
+  food: Food[];
   columns: number;
   cell: number;
   gap: number;
   emptyClass: string;
+  /** Classes for contribution levels 0–4, so body segments keep their real shade. */
+  levelClasses: string[];
 }) {
   const route = useMemo(() => planRoute(food, columns), [food, columns]);
-  // Route index at which each food square gets eaten.
-  const eatAt = useMemo(() => {
-    const keys = new Set(food.map((p) => `${p.x},${p.y}`));
-    const at = new Map<string, number>();
+  // In eating order: which square, its shade, and the route index where it's eaten.
+  const meals = useMemo(() => {
+    const byKey = new Map(food.map((f) => [`${f.x},${f.y}`, f]));
+    const out: (Food & { at: number })[] = [];
     route.forEach((p, i) => {
-      const k = `${p.x},${p.y}`;
-      if (keys.has(k) && !at.has(k)) at.set(k, i);
+      const f = byKey.get(`${p.x},${p.y}`);
+      if (f) {
+        out.push({ ...f, at: i });
+        byKey.delete(`${p.x},${p.y}`);
+      }
     });
-    return at;
+    return out;
   }, [food, route]);
 
   const rootRef = useRef<HTMLDivElement>(null);
-  const pathRef = useRef<SVGPathElement>(null);
-  const headRef = useRef<SVGCircleElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+  const segRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [visible, setVisible] = useState(false);
-  const [eatenUpTo, setEatenUpTo] = useState(-1); // route index reached; -1 = grid full
+  const [eaten, setEaten] = useState(-1); // meals eaten so far; -1 = resting, grid full
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -100,78 +107,97 @@ export function ContributionSnake({
   useEffect(() => {
     if (!visible || route.length < 2) return;
     const pitch = cell + gap;
-    const centre = (v: number) => v * pitch + cell / 2;
-    const at = (t: number): [number, number] => {
-      const i = Math.max(0, Math.min(route.length - 1, Math.floor(t)));
+    const at = (t: number): Point => {
+      const c = Math.max(0, Math.min(route.length - 1, t));
+      const i = Math.floor(c);
       const a = route[i]!;
       const b = route[Math.min(route.length - 1, i + 1)]!;
-      const f = t - Math.floor(t);
-      return [centre(a.x + (b.x - a.x) * f), centre(a.y + (b.y - a.y) * f)];
+      const f = c - i;
+      return { x: (a.x + (b.x - a.x) * f) * pitch, y: (a.y + (b.y - a.y) * f) * pitch };
     };
 
     let raf = 0;
-    let restTimer = 0;
-    let startTime = 0;
-    let lastIndex = -1;
+    let timer = 0;
+    let start = 0;
+    let lastEaten = -1;
     const end = route.length - 1;
 
     const frame = (now: number) => {
-      if (!startTime) startTime = now;
-      const t = Math.min(end, ((now - startTime) / 1000) * SPEED);
+      if (!start) start = now;
+      const t = Math.min(end, ((now - start) / 1000) * SPEED);
 
-      // Path from the tail to the head: interpolated ends, real corners in between.
-      const tail = Math.max(0, t - LENGTH);
-      const pts = [at(tail)];
-      for (let i = Math.floor(tail) + 1; i <= Math.floor(t); i++) pts.push(at(i));
-      pts.push(at(t));
-      pathRef.current?.setAttribute("d", `M${pts.map((p) => p.join(" ")).join("L")}`);
-      const [hx, hy] = at(t);
-      headRef.current?.setAttribute("cx", String(hx));
-      headRef.current?.setAttribute("cy", String(hy));
+      const head = at(t);
+      if (headRef.current) {
+        headRef.current.style.transform = `translate(${head.x}px, ${head.y}px)`;
+      }
 
-      const index = Math.floor(t);
-      if (index !== lastIndex) {
-        lastIndex = index;
-        setEatenUpTo(index);
+      let count = 0;
+      while (count < meals.length && meals[count]!.at <= t) count++;
+
+      // Newest meal sits right behind the head; each older one one step further back.
+      for (let s = 0; s < MAX_BODY; s++) {
+        const seg = segRefs.current[s];
+        if (!seg) continue;
+        const meal = meals[count - 1 - s];
+        if (!meal) {
+          seg.style.opacity = "0";
+          continue;
+        }
+        // A freshly eaten square slides from its grid spot into its place in the body.
+        const target = at(t - (s + 1) * SPACING);
+        const age = Math.min(1, (t - meal.at) / 1.2);
+        const ease = 1 - (1 - age) ** 3;
+        const home = { x: meal.x * pitch, y: meal.y * pitch };
+        const x = home.x + (target.x - home.x) * ease;
+        const y = home.y + (target.y - home.y) * ease;
+        const fade = s > MAX_BODY - 4 ? (MAX_BODY - s) / 4 : 1;
+        seg.style.transform = `translate(${x}px, ${y}px) scale(${0.86 - s * 0.012})`;
+        seg.style.opacity = String(fade);
+        const fill = seg.firstElementChild as HTMLElement | null;
+        if (fill) fill.className = `size-full rounded-[3px] ${levelClasses[meal.level] ?? levelClasses[4]}`;
+      }
+
+      if (count !== lastEaten) {
+        lastEaten = count;
+        setEaten(count);
       }
 
       if (t < end) {
         raf = requestAnimationFrame(frame);
       } else {
-        // Run finished: let the grid fade back, rest, then go again.
-        setEatenUpTo(-1);
-        restTimer = window.setTimeout(() => {
-          startTime = 0;
-          lastIndex = -1;
+        setEaten(-1);
+        timer = window.setTimeout(() => {
+          start = 0;
+          lastEaten = -1;
           raf = requestAnimationFrame(frame);
         }, REST_MS);
       }
     };
-    restTimer = window.setTimeout(() => (raf = requestAnimationFrame(frame)), 400);
-
+    timer = window.setTimeout(() => (raf = requestAnimationFrame(frame)), 400);
     return () => {
       cancelAnimationFrame(raf);
-      clearTimeout(restTimer);
+      clearTimeout(timer);
     };
-  }, [visible, route, cell, gap]);
+  }, [visible, route, meals, cell, gap, levelClasses]);
 
   const pitch = cell + gap;
-  const running = eatenUpTo >= 0;
+  const running = eaten >= 0;
 
   return (
     <div ref={rootRef} aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      {food.map((p) => {
-        const eaten = running && eatenUpTo >= (eatAt.get(`${p.x},${p.y}`) ?? Infinity);
+      {/* Holes left where squares lifted off; they fill back in after each run. */}
+      {meals.map((m, i) => {
+        const gone = running && i < eaten;
         return (
           <div
-            key={`${p.x},${p.y}`}
+            key={`${m.x},${m.y}`}
             className="absolute left-0 top-0 rounded-[3px] bg-background transition-opacity ease-out"
             style={{
               width: cell,
               height: cell,
-              transform: `translate(${p.x * pitch}px, ${p.y * pitch}px)`,
-              opacity: eaten ? 1 : 0,
-              transitionDuration: eaten ? "450ms" : "900ms",
+              transform: `translate(${m.x * pitch}px, ${m.y * pitch}px)`,
+              opacity: gone ? 1 : 0,
+              transitionDuration: gone ? "200ms" : "1100ms",
             }}
           >
             <div className={`size-full rounded-[3px] ${emptyClass}`} />
@@ -179,21 +205,26 @@ export function ContributionSnake({
         );
       })}
 
-      <svg
-        className="absolute inset-0 size-full overflow-visible text-foreground transition-opacity duration-500"
-        style={{ opacity: running ? 1 : 0 }}
-      >
-        <path
-          ref={pathRef}
-          fill="none"
-          stroke="currentColor"
-          strokeOpacity={0.85}
-          strokeWidth={cell * 0.42}
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      <div className="transition-opacity duration-500" style={{ opacity: running ? 1 : 0 }}>
+        {Array.from({ length: MAX_BODY }, (_, s) => (
+          <div
+            key={s}
+            ref={(el) => {
+              segRefs.current[s] = el;
+            }}
+            className="absolute left-0 top-0 rounded-[3px] bg-background opacity-0 shadow-sm"
+            style={{ width: cell, height: cell }}
+          >
+            <div className="size-full rounded-[3px]" />
+          </div>
+        ))}
+        {/* Head: a crisp square with a faint ring, so it reads as the leader. */}
+        <div
+          ref={headRef}
+          className="absolute left-0 top-0 rounded-[4px] bg-foreground ring-2 ring-foreground/15"
+          style={{ width: cell, height: cell }}
         />
-        <circle ref={headRef} r={cell * 0.3} fill="currentColor" />
-      </svg>
+      </div>
     </div>
   );
 }

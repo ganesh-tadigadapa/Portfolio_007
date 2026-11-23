@@ -34,6 +34,9 @@ export function VisitorCount() {
     void load();
   }, []);
 
+  // If the counter can't be reached, show nothing rather than a filler line.
+  if (failed) return null;
+
   return (
     <Container className="flex justify-center">
       <p
@@ -50,8 +53,6 @@ export function VisitorCount() {
             <strong className="font-semibold text-foreground">{count.toLocaleString()}</strong>
             <sup className="ml-0.5 text-[10px]">{ordinalSuffix(count)}</sup> visitor
           </span>
-        ) : failed ? (
-          <span>Thanks for stopping by</span>
         ) : (
           <span>Counting visitors…</span>
         )}

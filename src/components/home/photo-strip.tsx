@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Container } from "@/components/layout/container";
+import { SongCard } from "@/components/home/song-card";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { photosConfig, type Photo } from "@/config/photos";
 
@@ -96,6 +97,8 @@ export function PhotoStrip() {
           className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent"
         />
       </div>
+
+      <SongCard />
     </Container>
   );
 }

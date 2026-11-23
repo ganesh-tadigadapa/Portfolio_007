@@ -544,3 +544,14 @@ html.intro-lock body {
   .marquee { overflow-x: auto; scrollbar-width: none; }
   .marquee-track { animation: none; }
 }
+
+/* Song card vinyl: grooves + sheen, spins slowly while the song plays. */
+.vinyl {
+  background:
+    radial-gradient(circle, transparent 0 34%, transparent 34%),
+    conic-gradient(from 30deg, rgb(255 255 255 / 0.10), transparent 18%, rgb(255 255 255 / 0.08) 50%, transparent 68%, rgb(255 255 255 / 0.10)),
+    repeating-radial-gradient(circle, #141414 0 1.5px, #1d1d1d 1.5px 3px);
+  animation: vinyl-spin 3.2s linear infinite;
+}
+@keyframes vinyl-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .vinyl { animation: none; } }
