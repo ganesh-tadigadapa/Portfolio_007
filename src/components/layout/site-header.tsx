@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { SoundToggle } from "@/components/layout/sound-toggle";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass";
+import { TransitionLink } from "@/components/layout/page-transition";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -18,19 +19,19 @@ export function SiteHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/75 backdrop-blur-md">
+      <header className="site-header sticky top-0 z-50 w-full border-b border-border/50 bg-background/75 backdrop-blur-md">
         <div className="mx-auto flex h-14 w-full max-w-(--portfolio-content-width) items-center justify-between gap-4 px-5 sm:px-0">
-          <Link
+          <TransitionLink
             href="/"
             className="font-mono text-lg font-bold tracking-tight text-foreground hover:opacity-80"
           >
             GT
-          </Link>
+          </TransitionLink>
 
           <div className="flex items-center gap-3 sm:gap-5">
             <nav className="hidden items-center gap-4 text-sm font-medium sm:flex sm:gap-5">
               {headerNav.map((item) => (
-                <Link
+                <TransitionLink
                   key={item.href}
                   href={item.href}
                   className={cn(
@@ -41,7 +42,7 @@ export function SiteHeader() {
                   )}
                 >
                   {item.label}
-                </Link>
+                </TransitionLink>
               ))}
             </nav>
 

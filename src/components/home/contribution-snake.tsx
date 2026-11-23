@@ -35,9 +35,9 @@ function walk(from: Point, to: Point): Point[] {
   return out;
 }
 
-function planRoute(food: Point[], columns: number): Point[] {
+function planRoute(food: Point[], columns: number, startColumn: number): Point[] {
   const left = [...food];
-  const start: Point = { x: -2, y: 3 };
+  const start: Point = { x: startColumn - 2, y: 3 };
   let head = start;
   const route: Point[] = [start];
   while (left.length) {
@@ -59,8 +59,9 @@ function planRoute(food: Point[], columns: number): Point[] {
 }
 
 export function ContributionSnake({
-  food,
+  food: allFood,
   columns,
+  startColumn = 0,
   cell,
   gap,
   emptyClass,
@@ -68,13 +69,16 @@ export function ContributionSnake({
 }: {
   food: Food[];
   columns: number;
+  /** Grid column (week) the snake enters at; squares left of it are left alone. */
+  startColumn?: number;
   cell: number;
   gap: number;
   emptyClass: string;
   /** Classes for contribution levels 0–4, so body segments keep their real shade. */
   levelClasses: string[];
 }) {
-  const route = useMemo(() => planRoute(food, columns), [food, columns]);
+  const food = useMemo(() => allFood.filter((f) => f.x >= startColumn), [allFood, startColumn]);
+  const route = useMemo(() => planRoute(food, columns, startColumn), [food, columns, startColumn]);
   // In eating order: which square, its shade, and the route index where it's eaten.
   const meals = useMemo(() => {
     const byKey = new Map(food.map((f) => [`${f.x},${f.y}`, f]));

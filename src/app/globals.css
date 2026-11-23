@@ -522,6 +522,54 @@ html.modal-lock body {
   }
 }
 
+/* Page change from the header nav (page-transition.tsx): "card stack". The old page
+   sinks back (smaller, dimmer, rounded); the new page rises from below like a sheet,
+   its rounded top flattening as it lands. The header keeps still on top. Only active
+   while html[data-vt="nav"] is set, so the theme toggle's sweep is untouched. */
+html[data-vt="nav"] .site-header {
+  view-transition-name: site-header;
+}
+html[data-vt="nav"]::view-transition-group(site-header) {
+  animation: none;
+  z-index: 3;
+}
+html[data-vt="nav"]::view-transition-old(site-header) {
+  display: none;
+}
+html[data-vt="nav"]::view-transition-new(site-header) {
+  animation: none;
+}
+html[data-vt="nav"]::view-transition-group(root) {
+  animation-duration: 0.85s;
+  background: #050505;
+}
+html[data-vt="nav"]::view-transition-old(root) {
+  animation: nav-sink 0.85s cubic-bezier(0.65, 0, 0.35, 1) both;
+  transform-origin: 50% 0%;
+  overflow: hidden;
+}
+html[data-vt="nav"]::view-transition-new(root) {
+  mask-image: none;
+  animation: nav-rise 0.85s cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+@keyframes nav-sink {
+  to {
+    transform: scale(0.92) translateY(2%);
+    border-radius: 28px;
+    filter: brightness(0.45) blur(1px);
+  }
+}
+@keyframes nav-rise {
+  from {
+    clip-path: inset(100% 0 0 0 round 36px 36px 0 0);
+    transform: translateY(6%);
+  }
+  to {
+    clip-path: inset(0 0 0 0 round 0 0 0 0);
+    transform: translateY(0);
+  }
+}
+
 /* Sun/moon swap: the new icon spins and grows in. */
 @keyframes theme-icon-in {
   from { transform: rotate(-120deg) scale(0.3); opacity: 0; }

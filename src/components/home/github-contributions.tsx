@@ -65,6 +65,21 @@ export async function GitHubContributions() {
 
   const weeks = groupContributionsByWeek(data.contributions);
   const monthLabels = getMonthLabels(weeks);
+  // The snake starts at April of the latest year (earlier months are mostly empty, so
+  // starting from the far left just made it wander before reaching anything).
+  const latestYear = Math.max(
+    ...data.contributions.filter((d) => d.date).map((d) => new Date(d.date).getFullYear()),
+  );
+  const aprilColumn = Math.max(
+    0,
+    weeks.findIndex((week) =>
+      week.some((d) => {
+        if (!d.date) return false;
+        const date = new Date(d.date);
+        return date.getFullYear() === latestYear && date.getMonth() === 3;
+      }),
+    ),
+  );
   const total = data.total.lastYear;
   const yearRange = getYearRange(data.contributions);
   const gridWidth = weeks.length * WEEK_STEP;
@@ -125,6 +140,7 @@ export async function GitHubContributions() {
                 ))}
               </div>
               <ContributionSnake
+                startColumn={aprilColumn}
                 food={food}
                 columns={weeks.length}
                 cell={CELL}
