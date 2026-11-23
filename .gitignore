@@ -38,3 +38,4 @@ next-env.d.ts
 
 # local visitor counter (created on first visit in dev)
 /data/
+.vercel
