@@ -74,6 +74,7 @@ export function SiteHeader() {
       </header>
       <div className="fixed inset-x-0 bottom-4 z-50 flex justify-center px-4 sm:hidden">
         <LiquidGlassCard
+          backdrop
           glowIntensity="sm"
           shadowIntensity="md"
           borderRadius="9999px"

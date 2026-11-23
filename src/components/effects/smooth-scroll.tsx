@@ -23,9 +23,9 @@ export function SmoothScroll() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const lenis = new Lenis({
-      lerp: 0.09, // lower = floatier; 0.09 feels weighted but still responsive
+      lerp: 0.13, // lower = floatier; 0.13 is smooth but follows the wheel closely
       smoothWheel: true,
-      wheelMultiplier: 0.95,
+      wheelMultiplier: 1,
       anchors: true,
     });
     lenisRef.current = lenis;
