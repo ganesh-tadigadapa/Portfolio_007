@@ -183,6 +183,95 @@ main [data-scroll-section] {
 }
 
 /* ============================================================
+   Quote card on the home page (src/components/home/quote-card.tsx)
+   ============================================================ */
+
+/* soft light under the pointer */
+.quote-spotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    420px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    color-mix(in srgb, var(--foreground) 7%, transparent),
+    transparent 65%
+  );
+  transition: opacity 0.4s ease;
+}
+
+.quote-card:hover .quote-spotlight {
+  opacity: 1;
+}
+
+/* the highlighted line: bright text with a slow shine passing through */
+.quote-highlight {
+  background: linear-gradient(
+    100deg,
+    var(--foreground) 0%,
+    var(--foreground) 40%,
+    var(--secondary) 50%,
+    var(--foreground) 60%,
+    var(--foreground) 100%
+  );
+  background-size: 250% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-style: italic;
+}
+
+/* each word shines a beat after the one before, so the light sweeps across the line */
+.quote-in .quote-highlight {
+  animation: quote-shine 3.6s ease-in-out infinite;
+  animation-delay: calc(1.8s + var(--i) * 90ms);
+}
+
+@keyframes quote-shine {
+  0% { background-position: 100% 0; }
+  45%, 100% { background-position: 0% 0; }
+}
+
+/* word-by-word reveal, armed by JS so the quote is always readable without it */
+.quote-word {
+  display: inline-block;
+  white-space: pre;
+}
+
+.quote-armed .quote-word {
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(0.35em);
+}
+
+.quote-armed .quote-sanskrit,
+.quote-armed .quote-footer {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.quote-in .quote-word,
+.quote-in .quote-sanskrit,
+.quote-in .quote-footer {
+  opacity: 1;
+  filter: blur(0);
+  transform: none;
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.quote-in .quote-word {
+  transition-delay: calc(0.25s + var(--i) * 45ms);
+}
+
+.quote-in .quote-footer {
+  transition-delay: 1.4s;
+}
+
+/* ============================================================
    Site intro — kanji + 0–100% counter loader, then wipe upward
    (src/components/effects/site-intro.tsx)
    ============================================================ */

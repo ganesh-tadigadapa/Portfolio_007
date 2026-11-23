@@ -1,6 +1,10 @@
 export const quoteConfig = {
-  text: "Focus on your actions, never on the results. Your duty is to do the work — the fruits were never yours to chase.",
-  author: "Bhagavad Gita 2.47",
+  // The original verse, shown small above the translation.
+  sanskrit: "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन",
+  // Wrap the words to highlight in **double asterisks**.
+  text: "Focus on your actions, never on the results. Your duty is to do the work — **the fruits were never yours to chase.**",
+  source: "Bhagavad Gita",
+  verse: "2.47",
 };
 
 export const rotatingTitles = [
