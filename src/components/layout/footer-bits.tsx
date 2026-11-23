@@ -3,37 +3,28 @@
 import { ArrowUp, Check, Copy } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 
-/** The email in large type: click to copy (with a brief "Copied"), or mail directly. */
-export function CopyEmail({ email }: { email: string }) {
+/** Small icon button that copies a value (email, phone) and briefly shows a tick. */
+export function CopyButton({ value, label }: { value: string; label: string }) {
   const [copied, setCopied] = useState(false);
-
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(email);
+      await navigator.clipboard.writeText(value);
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 1800);
+      window.setTimeout(() => setCopied(false), 1600);
     } catch {
-      window.location.href = `mailto:${email}`;
+      // Clipboard blocked: nothing to do, the link next to it still works.
     }
   };
-
   return (
-    <div className="flex flex-col items-start gap-2 sm:items-end">
-      <a
-        href={`mailto:${email}`}
-        className="group text-lg font-medium tracking-tight underline decoration-border decoration-1 underline-offset-[6px] transition-colors hover:decoration-foreground sm:text-xl"
-      >
-        {email}
-      </a>
-      <button
-        type="button"
-        onClick={copy}
-        className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[12px] font-medium text-secondary transition-colors hover:bg-muted hover:text-foreground"
-      >
-        {copied ? <Check className="size-3.5 text-emerald-500" weight="bold" /> : <Copy className="size-3.5" />}
-        {copied ? "Copied" : "Copy email"}
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={copy}
+      aria-label={copied ? "Copied" : label}
+      title={copied ? "Copied" : label}
+      className="inline-flex size-6 shrink-0 items-center justify-center rounded-md text-secondary transition-colors hover:bg-muted hover:text-foreground"
+    >
+      {copied ? <Check className="size-3.5 text-emerald-500" weight="bold" /> : <Copy className="size-3.5" />}
+    </button>
   );
 }
 
