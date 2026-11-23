@@ -5,15 +5,10 @@ import { SectionHeading } from "@/components/shared/section-heading";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass";
 import { ProjectCover } from "@/components/projects/project-cover";
 import { ProjectsShowcase } from "@/components/projects/projects-showcase";
+import { PopupTrigger, ProjectPopupRoot } from "@/components/projects/project-popup";
 import { TechIcon, techTileClass } from "@/components/shared/tech-icon";
 import { projects, type Project } from "@/config/projects";
 import { getTechIcon } from "@/lib/tech-icons";
-
-/**
- * Which look the projects section uses. "showcase" = App Store–style cards that open
- * into an article (projects-showcase.tsx); "classic" = the original glass cards below.
- */
-const LAYOUT: "showcase" | "classic" = "showcase";
 
 export function ProjectCard({ project, index = 0 }: { project: Project; index?: number }) {
   const detailHref = `/projects/${project.slug}`;
@@ -114,11 +109,18 @@ export function ProjectsGrid({
   limit,
   showHeading = true,
   showViewAll = false,
+  variant = "classic",
 }: {
   items?: Project[];
   limit?: number;
   showHeading?: boolean;
   showViewAll?: boolean;
+  /**
+   * "classic": the original glass cards (live recording plays on hover).
+   * "showcase": tall App Store–style cards (projects-showcase.tsx).
+   * Both open the same project popup when you rest the mouse on a card.
+   */
+  variant?: "classic" | "showcase";
 }) {
   const source = items ?? projects;
   const list = limit && !items ? source.filter((p) => p.featured) : source;
@@ -130,14 +132,18 @@ export function ProjectsGrid({
         <SectionHeading eyebrow="Selected work" title="Featured projects" />
       )}
 
-      {LAYOUT === "showcase" ? (
+      {variant === "showcase" ? (
         <ProjectsShowcase projects={displayed} />
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2">
-          {displayed.map((project, index) => (
-            <ProjectCard key={project.slug} project={project} index={index} />
-          ))}
-        </div>
+        <ProjectPopupRoot>
+          <div className="grid gap-5 sm:grid-cols-2">
+            {displayed.map((project, index) => (
+              <PopupTrigger key={project.slug} project={project} className="flex min-w-0">
+                <ProjectCard project={project} index={index} />
+              </PopupTrigger>
+            ))}
+          </div>
+        </ProjectPopupRoot>
       )}
 
       {showViewAll && (

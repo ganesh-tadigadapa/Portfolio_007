@@ -20,7 +20,7 @@ export default function ProjectsPage() {
           Full-stack products, cloud infrastructure, and distributed systems I&apos;ve built along the way.
         </p>
       </Container>
-      <ProjectsGrid items={projects} showHeading={false} />
+      <ProjectsGrid items={projects} showHeading={false} variant="showcase" />
     </div>
   );
 }
