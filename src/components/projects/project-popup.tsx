@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
  * feels the same every time. The live recording plays inside it.
  */
 
-const OPEN_DELAY = 350; // ms resting on a card before it opens
+const OPEN_DELAY = 200; // ms resting on a card before it opens
 const CLOSE_DELAY = 200; // ms off the popup before it closes
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
@@ -81,12 +81,12 @@ export function ProjectPopupRoot({ children }: { children: ReactNode }) {
       hoverStart: (p) => {
         // Ignore while (or just after) the page is scrolling, and don't restart a
         // timer that is already counting down for this card.
-        if (Date.now() - scrolledAt.current < 350) return;
+        if (Date.now() - scrolledAt.current < 250) return;
         if (pending.current === p.slug) return;
         window.clearTimeout(openTimer.current);
         pending.current = p.slug;
         // Just closed? Let the close finish first so it never flickers.
-        const settle = Math.max(0, 260 - (Date.now() - closedAt.current));
+        const settle = Math.max(0, 180 - (Date.now() - closedAt.current));
         openTimer.current = window.setTimeout(() => {
           pending.current = null;
           setOpen(p);
@@ -207,8 +207,8 @@ function PopupLayer({
         data-lenis-prevent
         className={cn("fixed inset-0 z-[60] bg-black/70", passThrough)}
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1, transition: { duration: 0.3, ease: "easeOut" } }}
-        exit={{ opacity: 0, transition: { duration: 0.22, ease: "easeIn" } }}
+        animate={{ opacity: 1, transition: { duration: 0.22, ease: "easeOut" } }}
+        exit={{ opacity: 0, transition: { duration: 0.16, ease: "easeIn" } }}
         onClick={onClose}
       />
       <div
@@ -227,8 +227,8 @@ function PopupLayer({
           )}
           style={{ willChange: "transform, opacity" }}
           initial={{ opacity: 0, scale: 0.94, y: 18 }}
-          animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.42, ease: EASE_OUT } }}
-          exit={{ opacity: 0, scale: 0.97, y: 10, transition: { duration: 0.2, ease: "easeIn" } }}
+          animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.32, ease: EASE_OUT } }}
+          exit={{ opacity: 0, scale: 0.97, y: 10, transition: { duration: 0.16, ease: "easeIn" } }}
         >
           <div className="flex min-h-0 flex-1 flex-col">
             <div className="relative h-[min(50vh,460px)] w-full shrink-0 bg-muted">
@@ -253,7 +253,7 @@ function PopupLayer({
                   decoding="async"
                   className="absolute inset-0 size-full object-cover object-top"
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: 1, transition: { delay: 0.25, duration: 0.35 } }}
+                  animate={{ opacity: 1, transition: { delay: 0.15, duration: 0.3 } }}
                 />
               )}
               <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
