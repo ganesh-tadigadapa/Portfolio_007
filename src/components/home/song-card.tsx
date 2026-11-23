@@ -120,18 +120,19 @@ export function SongCard() {
   };
 
   return (
-    <figure data-reveal className="mt-8 w-full sm:max-w-md">
-      <div
-        className="relative flex items-center gap-3 overflow-hidden rounded-xl border border-border bg-card/60 py-2.5 pl-2.5 pr-2 transition-[background-image] duration-700"
-        style={{ backgroundImage: `linear-gradient(90deg, rgb(${song.tint} / 0.14), transparent 55%)` }}
-      >
+    <div
+      data-reveal
+      className="relative mt-8 overflow-hidden rounded-2xl border border-border bg-card/60 p-3 transition-[background-image] duration-700 sm:p-4"
+      style={{ backgroundImage: `radial-gradient(90% 160% at 0% 0%, rgb(${song.tint} / 0.16), transparent 60%)` }}
+    >
+      <div className="flex items-center gap-3 sm:gap-4">
         {/* Cover with its record peeking out; the record slides out and spins while playing. */}
-        <div className="relative shrink-0" style={{ width: 64, height: 48 }}>
+        <div className="relative shrink-0" style={{ width: 92, height: 64 }}>
           <div
             className="absolute transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
-            style={{ left: 4, top: 4, width: 40, height: 40, transform: `translateX(${playing ? 20 : 10}px)` }}
+            style={{ left: 4, top: 4, width: 56, height: 56, transform: `translateX(${playing ? 30 : 18}px)` }}
           >
-            <div className={cn("record size-full rounded-full", playing && "record-spin")}>
+            <div className={cn("record size-full rounded-full ring-1 ring-white/15", playing && "record-spin")}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 key={`label-${song.art}`}
@@ -144,8 +145,8 @@ export function SongCard() {
             </div>
           </div>
           <div
-            className="absolute overflow-hidden rounded-md shadow-[0_6px_14px_-6px_rgba(0,0,0,0.6)] ring-1 ring-black/10 dark:ring-white/10"
-            style={{ left: 0, top: 0, width: 48, height: 48 }}
+            className="absolute overflow-hidden rounded-lg shadow-[0_8px_18px_-8px_rgba(0,0,0,0.65)] ring-1 ring-black/10 dark:ring-white/10"
+            style={{ left: 0, top: 0, width: 64, height: 64 }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img key={`cover-${song.art}`} src={song.art} alt={`${song.title} cover`} className="song-fade size-full object-cover" />
@@ -153,26 +154,18 @@ export function SongCard() {
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-2">
-            <p key={song.title} className="song-fade truncate text-sm font-semibold leading-tight">
-              {song.title}
-            </p>
-            <span className="shrink-0 font-mono text-[9.5px] tabular-nums text-secondary">
-              {String(index + 1).padStart(2, "0")}/{String(PLAYLIST.length).padStart(2, "0")}
-            </span>
-          </div>
-          <p className="truncate text-[12px] text-secondary">{song.artist}</p>
-          <div className="mt-1.5 flex items-center gap-2">
-            <div className="relative h-[2px] flex-1 overflow-hidden rounded-full bg-foreground/10">
-              <div ref={fill} className="absolute inset-0 rounded-full bg-foreground/70" style={{ clipPath: "inset(0 100% 0 0)" }} />
-            </div>
-            <span ref={clock} className="w-6 text-right font-mono text-[9.5px] tabular-nums text-secondary">
-              0:00
-            </span>
-          </div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-secondary">
+            {playing ? "Now playing" : "On repeat"} &middot; {String(index + 1).padStart(2, "0")}/
+            {String(PLAYLIST.length).padStart(2, "0")}
+          </p>
+          <p key={song.title} className="song-fade mt-0.5 truncate text-[15px] font-semibold leading-snug">
+            {song.title}
+            <span className="font-normal text-secondary"> &mdash; {song.artist}</span>
+          </p>
+          <p className="mt-0.5 hidden truncate text-[12.5px] italic text-foreground/60 sm:block">&ldquo;{NOTE}&rdquo;</p>
         </div>
 
-        <div className="flex shrink-0 items-center">
+        <div className="flex shrink-0 items-center gap-0.5">
           <IconButton label="Previous song" onClick={() => go(-1)}>
             <SkipBack className="size-3.5" weight="fill" />
           </IconButton>
@@ -180,7 +173,7 @@ export function SongCard() {
             type="button"
             onClick={toggle}
             aria-label={playing ? `Pause ${song.title}` : `Play ${song.title} by ${song.artist}`}
-            className="inline-flex size-8 items-center justify-center rounded-full bg-foreground text-background transition-transform hover:scale-105 active:scale-95"
+            className="inline-flex size-9 items-center justify-center rounded-full bg-foreground text-background shadow-[0_6px_16px_-6px_rgba(0,0,0,0.6)] transition-transform hover:scale-105 active:scale-95"
           >
             {playing ? <Pause className="size-3.5" weight="fill" /> : <Play className="size-3.5 translate-x-px" weight="fill" />}
           </button>
@@ -190,19 +183,28 @@ export function SongCard() {
         </div>
       </div>
 
-      {/* Same caption style as the photos above. */}
-      <figcaption className="mt-2 px-1">
-        <span className="text-[12.5px] italic leading-snug text-foreground/85">&ldquo;{NOTE}&rdquo;</span>
-        <span className="mt-0.5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-secondary">
-          {playing ? "Now playing" : "On repeat"}
-          <a href={song.link} target="_blank" rel="noopener noreferrer" className="hover:text-foreground">
-            · preview ↗
-          </a>
+      {/* Full-width progress along the bottom. */}
+      <div className="mt-3 flex items-center gap-3">
+        <span ref={clock} className="w-7 font-mono text-[10px] tabular-nums text-secondary">
+          0:00
         </span>
-      </figcaption>
+        <div className="relative h-[3px] flex-1 overflow-hidden rounded-full bg-foreground/10">
+          <div ref={fill} className="absolute inset-0 rounded-full bg-foreground/70" style={{ clipPath: "inset(0 100% 0 0)" }} />
+        </div>
+        <span className="w-7 text-right font-mono text-[10px] tabular-nums text-secondary">0:30</span>
+        <a
+          href={song.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Open ${song.title} on Apple Music (preview source)`}
+          className="font-mono text-[9.5px] uppercase tracking-wider text-secondary/70 hover:text-foreground"
+        >
+          ↗
+        </a>
+      </div>
 
       <audio ref={audio} src={song.preview} preload="none" />
-    </figure>
+    </div>
   );
 }
 
