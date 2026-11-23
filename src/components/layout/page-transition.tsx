@@ -6,66 +6,67 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentProps, type MouseEvent } from "react";
 
 /**
- * Page transitions for the header nav: cover → swap → reveal.
+ * Header-nav page transition: a curved "liquid" wipe.
  *
- * 1. Full-screen panels move in and cover the page, with the destination's name.
- * 2. The route changes underneath while covered (no half-rendered frame is ever seen).
- * 3. The panels move away and reveal the new page.
+ *   cover   a full-screen panel slides in, its leading edge a soft curve that flattens
+ *           as it lands
+ *   hold    the destination's name rises letter by letter while a hairline draws
+ *           underneath; the route changes behind the panel
+ *   reveal  the panel carries on out, its trailing edge bulging into a curve
  *
- * Every moving piece animates only transform/opacity, which the GPU composites, so it
- * holds a steady frame rate. Each destination has its own move:
- *   /          "iris"    a circle grows from the click point, then shrinks back into it
- *   /about     "rows"    horizontal bars sweep across in a cascade
- *   /projects  "columns" vertical columns rise in a wave
- * The panels are a lifted charcoal with a faint light edge, in both themes.
+ * Going forward in the nav (Home → About → Projects) wipes upward; going back wipes
+ * downward. The panel is the theme inverted (light on dark mode, dark on light mode),
+ * like the monochrome theme toggle. Everything that moves is transform/opacity only,
+ * so the GPU composites it and frames stay steady.
  * Reduced motion: a plain instant navigation.
  */
 
-type Variant = "iris" | "rows" | "columns";
-type Detail = { href: string; x: number; y: number };
-
-const ROUTES: Record<string, { variant: Variant; label: string; index: string }> = {
-  "/": { variant: "iris", label: "Home", index: "01" },
-  "/about": { variant: "rows", label: "About", index: "02" },
-  "/projects": { variant: "columns", label: "Projects", index: "03" },
+const ROUTES: Record<string, { label: string; index: number }> = {
+  "/": { label: "Home", index: 1 },
+  "/about": { label: "About", index: 2 },
+  "/projects": { label: "Projects", index: 3 },
 };
 
 const EVENT = "page-transition:go";
 const EASE: Transition["ease"] = [0.76, 0, 0.24, 1];
-const COLUMNS = 6;
-const ROWS = 5;
-// How long the cover takes to close completely (last panel included), per variant.
-const COVER_MS: Record<Variant, number> = { iris: 720, rows: 780, columns: 820 };
+const COVER_S = 0.8;
+const REVEAL_S = 0.85;
+const HOLD_MS = 380; // minimum time the name is on screen
 
 type Stage = "cover" | "reveal";
-type Active = Detail & { variant: Variant; label: string; index: string; stage: Stage; id: number };
+type Active = { href: string; label: string; index: number; dir: 1 | -1; stage: Stage; id: number };
 
-/** Mount once in the layout: renders the transition overlay and drives the sequence. */
 export function PageTransitionListener() {
   const router = useRouter();
   const pathname = usePathname();
   const [active, setActive] = useState<Active | null>(null);
   const waitingFor = useRef<string | null>(null);
+  const coveredAt = useRef(0);
   const timers = useRef<number[]>([]);
+  const pathRef = useRef(pathname);
+  pathRef.current = pathname;
 
   const later = (fn: () => void, ms: number) => timers.current.push(window.setTimeout(fn, ms));
 
   useEffect(() => {
     const onGo = (e: Event) => {
-      const { href, x, y } = (e as CustomEvent<Detail>).detail;
-      if (waitingFor.current) return; // one at a time
-      const route = ROUTES[href] ?? { variant: "columns" as Variant, label: "", index: "" };
+      const { href } = (e as CustomEvent<{ href: string }>).detail;
+      if (waitingFor.current) return;
+      const to = ROUTES[href] ?? { label: "", index: 9 };
+      const from = ROUTES[pathRef.current]?.index ?? 0;
       waitingFor.current = href;
-      setActive({ href, x, y, ...route, stage: "cover", id: Date.now() });
-      // Once covered, swap the page underneath.
-      later(() => router.push(href, { scroll: false }), COVER_MS[route.variant] + 60);
-      // Safety net: never leave the screen covered.
+      router.prefetch(href); // have the page ready by the time the screen is covered
+      setActive({ href, ...to, dir: to.index >= from ? 1 : -1, stage: "cover", id: Date.now() });
+      later(() => {
+        coveredAt.current = Date.now();
+        router.push(href, { scroll: false });
+      }, COVER_S * 1000);
       later(() => {
         if (waitingFor.current === href) {
           waitingFor.current = null;
           setActive((a) => (a ? { ...a, stage: "reveal" } : a));
         }
-      }, 4000);
+      }, 3200);
     };
     document.addEventListener(EVENT, onGo);
     return () => {
@@ -74,17 +75,15 @@ export function PageTransitionListener() {
     };
   }, [router]);
 
-  // The new route has rendered: jump to its top, give it a frame to paint, then reveal.
+  // New route rendered behind the panel: go to its top, let the name breathe, reveal.
   useEffect(() => {
     if (!waitingFor.current || pathname !== waitingFor.current) return;
     waitingFor.current = null;
     window.scrollTo(0, 0);
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => setActive((a) => (a ? { ...a, stage: "reveal" } : a))),
-    );
+    const wait = Math.max(0, HOLD_MS - (Date.now() - coveredAt.current));
+    later(() => setActive((a) => (a ? { ...a, stage: "reveal" } : a)), wait);
   }, [pathname]);
 
-  // Lock scrolling while covered.
   useEffect(() => {
     if (!active) return;
     const html = document.documentElement;
@@ -93,132 +92,91 @@ export function PageTransitionListener() {
   }, [active]);
 
   if (!active) return null;
-  const done = () => setActive((a) => (a && a.stage === "reveal" ? null : a));
+  return <Wipe key={active.id} a={active} onDone={() => setActive(null)} />;
+}
+
+function Wipe({ a, onDone }: { a: Active; onDone: () => void }) {
+  const up = a.dir === 1;
+  const covering = a.stage === "cover";
+  // Panel travel: enters from below (up) or above (down), exits the opposite side.
+  const from = up ? "100%" : "-100%";
+  const to = up ? "-100%" : "100%";
 
   return (
-    <div
-      key={active.id}
-      aria-hidden
-      data-lenis-prevent
-      className="pointer-events-auto fixed inset-0 z-[200] overflow-hidden"
-    >
-      {active.variant === "iris" && <Iris a={active} onDone={done} />}
-      {active.variant === "rows" && <Rows a={active} onDone={done} />}
-      {active.variant === "columns" && <Columns a={active} onDone={done} />}
-      <Label a={active} />
+    <div aria-hidden data-lenis-prevent className="fixed inset-0 z-[200] overflow-hidden">
+      <motion.div
+        className="absolute inset-0 bg-foreground text-background"
+        style={{ willChange: "transform" }}
+        initial={{ y: from }}
+        animate={{ y: covering ? "0%" : to }}
+        transition={{ duration: covering ? COVER_S : REVEAL_S, ease: EASE }}
+        onAnimationComplete={() => !covering && onDone()}
+      >
+        {/* Leading curve: bulges out ahead of the panel, flattens as it lands. */}
+        <motion.div
+          className="absolute left-[-25%] h-[24vh] w-[150%] rounded-[50%] bg-foreground"
+          style={{ [up ? "top" : "bottom"]: "-12vh", willChange: "transform" }}
+          initial={{ scaleY: 1 }}
+          animate={{ scaleY: 0 }}
+          transition={{ duration: COVER_S, ease: EASE }}
+        />
+        {/* Trailing curve: grows as the panel pulls away on the reveal. */}
+        <motion.div
+          className="absolute left-[-25%] h-[24vh] w-[150%] rounded-[50%] bg-foreground"
+          style={{ [up ? "bottom" : "top"]: "-12vh", willChange: "transform" }}
+          initial={{ scaleY: 0 }}
+          animate={{ scaleY: covering ? 0 : 1 }}
+          transition={{ duration: REVEAL_S, ease: EASE }}
+        />
+
+        <Title a={a} />
+      </motion.div>
     </div>
   );
 }
 
-// Lifted charcoal with a faint light edge, so the panels read clearly over the dark theme too.
-const PANEL = "absolute bg-[#16161a] shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_0_0_1px_rgba(255,255,255,0.04)]";
-
-function Columns({ a, onDone }: { a: Active; onDone: () => void }) {
-  return (
-    <>
-      {Array.from({ length: COLUMNS }, (_, i) => (
-        <motion.div
-          key={i}
-          className={PANEL}
-          style={{
-            left: `${(i * 100) / COLUMNS}%`,
-            width: `calc(${100 / COLUMNS}% + 1px)`,
-            top: 0,
-            bottom: 0,
-            willChange: "transform",
-          }}
-          initial={{ y: "100%" }}
-          animate={a.stage === "cover" ? { y: "0%" } : { y: "-100%" }}
-          transition={{
-            duration: 0.62,
-            ease: EASE,
-            delay: a.stage === "cover" ? i * 0.04 : i * 0.035,
-          }}
-          onAnimationComplete={() => a.stage === "reveal" && i === COLUMNS - 1 && onDone()}
-        />
-      ))}
-    </>
-  );
-}
-
-function Rows({ a, onDone }: { a: Active; onDone: () => void }) {
-  return (
-    <>
-      {Array.from({ length: ROWS }, (_, i) => (
-        <motion.div
-          key={i}
-          className={PANEL}
-          style={{
-            top: `${(i * 100) / ROWS}%`,
-            height: `calc(${100 / ROWS}% + 1px)`,
-            left: 0,
-            right: 0,
-            willChange: "transform",
-          }}
-          initial={{ x: i % 2 ? "100%" : "-100%" }}
-          animate={a.stage === "cover" ? { x: "0%" } : { x: i % 2 ? "-100%" : "100%" }}
-          transition={{
-            duration: 0.62,
-            ease: EASE,
-            delay: a.stage === "cover" ? i * 0.04 : i * 0.035,
-          }}
-          onAnimationComplete={() => a.stage === "reveal" && i === ROWS - 1 && onDone()}
-        />
-      ))}
-    </>
-  );
-}
-
-function Iris({ a, onDone }: { a: Active; onDone: () => void }) {
-  // A circle big enough to cover the screen from the click point, grown with scale.
-  const w = typeof window === "undefined" ? 1600 : window.innerWidth;
-  const h = typeof window === "undefined" ? 900 : window.innerHeight;
-  const r = Math.hypot(Math.max(a.x, w - a.x), Math.max(a.y, h - a.y)) + 4;
-  return (
-    <motion.div
-      className="absolute rounded-full bg-[#16161a] shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_0_80px_rgba(0,0,0,0.6)]"
-      style={{
-        left: a.x - r,
-        top: a.y - r,
-        width: r * 2,
-        height: r * 2,
-        willChange: "transform",
-      }}
-      initial={{ scale: 0 }}
-      animate={{ scale: a.stage === "cover" ? 1 : 0 }}
-      transition={{ duration: a.stage === "cover" ? 0.7 : 0.75, ease: [0.65, 0, 0.35, 1] }}
-      onAnimationComplete={() => a.stage === "reveal" && onDone()}
-    />
-  );
-}
-
-/** The destination's name, rising in once the screen is covered and lifting away before the reveal. */
-function Label({ a }: { a: Active }) {
+function Title({ a }: { a: Active }) {
   if (!a.label) return null;
   const show = a.stage === "cover";
+  const letters = [...a.label];
   return (
-    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-      <div className="overflow-hidden px-6 text-center">
-        <motion.p
-          className="font-mono text-[11px] uppercase tracking-[0.35em] text-white/45"
-          initial={{ opacity: 0, y: 10 }}
-          animate={show ? { opacity: 1, y: 0 } : { opacity: 0, y: -8 }}
-          transition={{ duration: show ? 0.45 : 0.22, ease: "easeOut", delay: show ? 0.38 : 0 }}
-        >
-          / {a.index}
-        </motion.p>
-        <div className="overflow-hidden">
-          <motion.p
-            className="mt-2 text-5xl font-bold tracking-tight text-white sm:text-7xl"
+    <div className="absolute inset-0 flex flex-col items-center justify-center px-6">
+      <motion.p
+        className="font-mono text-[11px] uppercase tracking-[0.4em] opacity-50"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: show ? 0.5 : 0 }}
+        transition={{ duration: show ? 0.4 : 0.2, delay: show ? 0.45 : 0 }}
+      >
+        {String(a.index).padStart(2, "0")} / {String(Object.keys(ROUTES).length).padStart(2, "0")}
+      </motion.p>
+
+      <p className="mt-3 flex overflow-hidden text-6xl font-semibold leading-[1.1] tracking-tight sm:text-8xl">
+        {letters.map((ch, i) => (
+          <motion.span
+            key={i}
+            className="inline-block"
             style={{ willChange: "transform" }}
             initial={{ y: "110%" }}
-            animate={show ? { y: "0%" } : { y: "-110%" }}
-            transition={{ duration: show ? 0.6 : 0.35, ease: EASE, delay: show ? 0.32 : 0 }}
+            animate={{ y: show ? "0%" : "-110%" }}
+            transition={{
+              duration: show ? 0.7 : 0.4,
+              ease: EASE,
+              delay: show ? 0.35 + i * 0.035 : i * 0.02,
+            }}
           >
-            {a.label}
-          </motion.p>
-        </div>
-      </div>
+            {ch}
+          </motion.span>
+        ))}
+      </p>
+
+      {/* Hairline that draws while the next page loads behind. */}
+      <motion.span
+        className="mt-6 block h-px w-40 origin-left bg-current opacity-40"
+        style={{ willChange: "transform" }}
+        initial={{ scaleX: 0 }}
+        animate={show ? { scaleX: 1 } : { scaleX: 1, opacity: 0 }}
+        transition={{ duration: show ? 0.9 : 0.25, ease: EASE, delay: show ? 0.5 : 0 }}
+      />
     </div>
   );
 }
@@ -229,17 +187,12 @@ export function TransitionLink({ href, onClick, ...props }: ComponentProps<typeo
   const handle = (e: MouseEvent<HTMLAnchorElement>) => {
     onClick?.(e);
     if (e.defaultPrevented) return;
-    // Let the browser handle new tabs, modified clicks and same-page clicks.
     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     if (href === pathname) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     e.preventDefault();
-    document.dispatchEvent(
-      new CustomEvent<Detail>(EVENT, {
-        detail: { href, x: e.clientX || window.innerWidth / 2, y: e.clientY || 0 },
-      }),
-    );
+    document.dispatchEvent(new CustomEvent(EVENT, { detail: { href } }));
   };
 
   return <Link href={href} onClick={handle} {...props} />;
