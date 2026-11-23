@@ -8,15 +8,17 @@ type VisitorData = {
   count: number;
 };
 
+// Upstash sets UPSTASH_REDIS_*; when added through the Vercel dashboard it may set KV_REST_API_* instead.
+const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+
 function hasRedisConfig() {
-  return Boolean(
-    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN,
-  );
+  return Boolean(REDIS_URL && REDIS_TOKEN);
 }
 
 async function redisGet(): Promise<number> {
-  const url = process.env.UPSTASH_REDIS_REST_URL!;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN!;
+  const url = REDIS_URL!;
+  const token = REDIS_TOKEN!;
 
   const res = await fetch(`${url}/get/${REDIS_KEY}`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -32,8 +34,8 @@ async function redisGet(): Promise<number> {
 }
 
 async function redisIncr(): Promise<number> {
-  const url = process.env.UPSTASH_REDIS_REST_URL!;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN!;
+  const url = REDIS_URL!;
+  const token = REDIS_TOKEN!;
 
   const res = await fetch(`${url}/incr/${REDIS_KEY}`, {
     headers: { Authorization: `Bearer ${token}` },
