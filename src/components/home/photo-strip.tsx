@@ -1,18 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { CaretLeft, CaretRight } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
 import { Container } from "@/components/layout/container";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { photosConfig, type Photo } from "@/config/photos";
-import { cn } from "@/lib/utils";
 
 /**
- * A sideways-scrolling row of photos. Every photo has the same height and keeps
- * its own aspect ratio, with a small caption underneath. The edges fade out and
- * arrow buttons appear whenever there is more to scroll in that direction.
+ * An endless, slowly drifting row of photos (a marquee). The list is rendered twice
+ * side by side and the track slides left by exactly one copy, so the loop is seamless.
+ * Hovering or focusing pauses it; with reduced motion it becomes a normal scroller.
  */
+
 /** Random order where no two neighbours share a group (mountains next to mountains). */
 function shuffleApart(list: Photo[]): Photo[] {
   for (let attempt = 0; attempt < 300; attempt++) {
@@ -21,134 +20,85 @@ function shuffleApart(list: Photo[]): Photo[] {
       const j = Math.floor(Math.random() * (i + 1));
       [a[i], a[j]] = [a[j], a[i]];
     }
-    if (a.every((p, i) => i === 0 || p.group !== a[i - 1].group)) return a;
+    const ok = a.every((p, i) => i === 0 || p.group !== a[i - 1].group);
+    // The loop joins the last photo to the first, so check that seam too.
+    if (ok && a[0].group !== a[a.length - 1].group) return a;
   }
   return list;
 }
 
 export function PhotoStrip() {
-  const scroller = useRef<HTMLDivElement>(null);
   // Server render uses the configured order; each visit then gets a fresh shuffle.
   const [photos, setPhotos] = useState<Photo[]>(photosConfig.photos);
   useEffect(() => setPhotos(shuffleApart(photosConfig.photos)), []);
-  const [canLeft, setCanLeft] = useState(false);
-  const [canRight, setCanRight] = useState(false);
-
-  const update = useCallback(() => {
-    const el = scroller.current;
-    if (!el) return;
-    setCanLeft(el.scrollLeft > 4);
-    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-  }, []);
-
-  useEffect(() => {
-    update();
-    const el = scroller.current;
-    if (!el) return;
-    el.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    return () => {
-      el.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, [update]);
-
-  const scrollBy = (dir: 1 | -1) => {
-    const el = scroller.current;
-    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
-  };
 
   if (photosConfig.photos.length === 0) return null;
 
-  return (
-    <Container>
-      <SectionHeading eyebrow="Off the clock" title={photosConfig.title} />
-      <p data-reveal className="text-secondary">
-        {photosConfig.description}
-      </p>
+  // Roughly 7s per photo keeps the drift calm regardless of how many there are.
+  const duration = `${photos.length * 7}s`;
 
-      <div className="relative mt-6">
-        <div
-          ref={scroller}
-          tabIndex={0}
-          role="region"
-          aria-label="Photographs"
-          className="overflow-x-auto overscroll-x-contain scroll-smooth [scrollbar-width:none] focus-visible:outline-none [&::-webkit-scrollbar]:hidden"
+  return (
+    <section>
+      <Container>
+        <SectionHeading eyebrow="Off the clock" title={photosConfig.title} />
+        <p data-reveal className="text-secondary">
+          {photosConfig.description}
+        </p>
+      </Container>
+
+      <div
+        role="region"
+        aria-label="Photographs"
+        tabIndex={0}
+        className="marquee group/marquee relative mx-auto mt-8 max-w-6xl overflow-hidden focus-visible:outline-none"
+      >
+        <ul
+          className="marquee-track flex w-max gap-5 py-3"
+          style={{ animationDuration: duration }}
         >
-          <ul className="flex w-max gap-3">
-            {photos.map((photo, i) => (
-              <li key={photo.src} className="shrink-0">
+          {[0, 1].map((copy) =>
+            photos.map((photo, i) => (
+              <li
+                key={`${copy}-${photo.src}`}
+                aria-hidden={copy === 1 || undefined}
+                className="w-[260px] shrink-0 sm:w-[300px]"
+              >
                 <figure>
-                  <div className="h-40 overflow-hidden rounded-lg border border-border bg-muted sm:h-48">
+                  <div className="aspect-[4/3] overflow-hidden rounded-[22px] bg-muted shadow-[0_8px_30px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/5 dark:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.7)] dark:ring-white/10">
                     <Image
                       src={photo.src}
-                      alt={photo.alt}
+                      alt={copy === 1 ? "" : photo.alt}
                       width={photo.width}
                       height={photo.height}
-                      sizes="(min-width: 640px) 420px, 300px"
-                      loading={i < 3 ? "eager" : "lazy"}
-                      className="h-full w-auto max-w-none transition-[filter,transform] duration-500 hover:scale-[1.03] dark:brightness-90 dark:hover:brightness-100"
+                      sizes="300px"
+                      loading={copy === 0 && i < 4 ? "eager" : "lazy"}
+                      className="h-full w-full object-cover transition-[filter,transform] duration-700 ease-out hover:scale-[1.04] dark:brightness-90 dark:hover:brightness-100"
                     />
                   </div>
-                  <figcaption className="mt-2 w-0 min-w-full">
-                    <span className="line-clamp-3 text-[12.5px] italic leading-snug text-foreground/85">
+                  <figcaption className="mt-3 px-1">
+                    <span className="line-clamp-2 text-[13px] italic leading-relaxed text-foreground/80">
                       &ldquo;{photo.quote}&rdquo;
                     </span>
-                    <span className="mt-0.5 block truncate font-mono text-[11px] uppercase tracking-wider text-secondary">
+                    <span className="mt-1 block truncate font-mono text-[10.5px] uppercase tracking-[0.14em] text-secondary">
                       {photo.caption}
                     </span>
                   </figcaption>
                 </figure>
               </li>
-            ))}
-          </ul>
-        </div>
+            )),
+          )}
+        </ul>
 
-        {/* Edge fades and arrows, shown only when there is more to see. */}
+        {/* Soft fades on both edges so photos drift in and out gently. */}
         <div
           aria-hidden
-          className={cn(
-            "pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-background to-transparent transition-opacity duration-300",
-            canLeft ? "opacity-100" : "opacity-0",
-          )}
+          className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-background to-transparent sm:w-32"
         />
         <div
           aria-hidden
-          className={cn(
-            "pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent transition-opacity duration-300",
-            canRight ? "opacity-100" : "opacity-0",
-          )}
+          className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background to-transparent sm:w-32"
         />
-        <ArrowButton side="left" visible={canLeft} onClick={() => scrollBy(-1)} />
-        <ArrowButton side="right" visible={canRight} onClick={() => scrollBy(1)} />
       </div>
-    </Container>
-  );
-}
-
-function ArrowButton({
-  side,
-  visible,
-  onClick,
-}: {
-  side: "left" | "right";
-  visible: boolean;
-  onClick: () => void;
-}) {
-  const Icon = side === "left" ? CaretLeft : CaretRight;
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      tabIndex={visible ? 0 : -1}
-      aria-label={side === "left" ? "Previous photos" : "More photos"}
-      className={cn(
-        "absolute top-20 -translate-y-1/2 rounded-full border border-border bg-background/80 p-1.5 text-secondary shadow-sm backdrop-blur transition-all duration-300 hover:text-foreground sm:top-24",
-        side === "left" ? "left-2" : "right-2",
-        visible ? "opacity-100" : "pointer-events-none opacity-0",
-      )}
-    >
-      <Icon className="size-4" weight="bold" />
-    </button>
+    </section>
   );
 }

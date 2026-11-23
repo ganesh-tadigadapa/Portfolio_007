@@ -29,10 +29,11 @@ const WORD_INTERVAL_MS = 950;
 
 /**
  * Runs before first paint (from <head>):
+ * - turns off the browser's scroll restoration so every load starts at the top
  * - marks <html> with reveal-pending so scroll-reveal targets start hidden
  *   (ScrollReveal takes over and plays them once the intro wipes away).
  */
-export const siteIntroBootScript = `(function(){var d=document.documentElement;if(!matchMedia("(prefers-reduced-motion: reduce)").matches)d.classList.add("reveal-pending");})()`;
+export const siteIntroBootScript = `(function(){try{history.scrollRestoration="manual";}catch(e){}window.scrollTo(0,0);var d=document.documentElement;if(!matchMedia("(prefers-reduced-motion: reduce)").matches)d.classList.add("reveal-pending");})()`;
 
 export function SiteIntro() {
   const [mounted, setMounted] = useState(true);
@@ -60,6 +61,7 @@ export function SiteIntro() {
     let disposed = false;
 
     html.classList.add("intro-lock");
+    window.scrollTo(0, 0);
 
     /* ---- rotating word, characters staggered in and out ---- */
     // Two frames so the hidden state is painted before the reveal transition starts.
@@ -160,6 +162,8 @@ export function SiteIntro() {
 
       later(
         () => {
+          // Every visit opens on the top of the homepage, never a remembered position.
+          window.scrollTo({ top: 0, left: 0, behavior: "instant" });
           root.classList.add("il-out");
           html.classList.remove("intro-lock");
           // Hand over to the page: ScrollReveal starts building the hero now.

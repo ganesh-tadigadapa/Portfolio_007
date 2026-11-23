@@ -14,12 +14,11 @@ const GAP = 4;
 const WEEK_STEP = CELL + GAP;
 
 const levelColors = [
-  // GitHub's own contribution greens, light and dark
-  "bg-[#ebedf0] dark:bg-[#161b22]",
-  "bg-[#9be9a8] dark:bg-[#0e4429]",
-  "bg-[#40c463] dark:bg-[#006d32]",
-  "bg-[#30a14e] dark:bg-[#26a641]",
-  "bg-[#216e39] dark:bg-[#39d353]",
+  "bg-foreground/[0.06] dark:bg-foreground/[0.07]",
+  "bg-foreground/[0.22] dark:bg-foreground/[0.25]",
+  "bg-foreground/[0.42] dark:bg-foreground/[0.45]",
+  "bg-foreground/[0.65] dark:bg-foreground/[0.68]",
+  "bg-foreground/[0.9] dark:bg-foreground/[0.92]",
 ];
 
 function getMonthLabels(weeks: ContributionDay[][]) {
