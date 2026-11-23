@@ -34,8 +34,9 @@ export const projects: Project[] = [
       "Diabetic retinopathy screening from fundus photos, built for Smart India Hackathon: ICDR severity grade, Grad-CAM explanations and a PDF report for doctors.",
     tech: ["TensorFlow", "FastAPI", "Python", "Next.js", "TypeScript", "Docker"],
     href: "https://github.com/ganesh-tadigadapa/retinaX",
+    website: "https://retinexai.vercel.app",
     featured: true,
-    cover: "/assets/projects/retinax.png",
+    cover: "/assets/projects/retinax.jpg",
     gradient: "from-red-500/20 via-rose-500/15 to-pink-500/20",
   },
   {
@@ -48,6 +49,7 @@ export const projects: Project[] = [
     href: "https://github.com/ganesh-tadigadapa/vautify",
     website: "https://vault-store-865.netlify.app/",
     featured: true,
+    cover: "/assets/projects/vautify.jpg",
     gradient: "from-blue-500/25 via-indigo-500/15 to-slate-500/20",
   },
   {
