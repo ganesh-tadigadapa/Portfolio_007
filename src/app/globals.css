@@ -522,54 +522,51 @@ html.modal-lock body {
   }
 }
 
-/* Page transition (page-transition.tsx). Panel colours follow the theme: deep graphite
-   with a soft glow from the top in dark mode, warm white in light mode. */
-:root {
-  --pt-bg: #f6f5f2;
-  --pt-fg: #0b0b0c;
-  --pt-glow: rgb(255 255 255 / 0.9);
-  --pt-rim: rgb(0 0 0 / 0.06);
-}
-.dark {
-  --pt-bg: #121214;
-  --pt-fg: #f4f4f2;
-  --pt-glow: rgb(255 255 255 / 0.07);
-  --pt-rim: rgb(255 255 255 / 0.09);
-}
-.pt-panel {
-  background:
-    radial-gradient(120% 70% at 50% 0%, var(--pt-glow), transparent 60%),
-    var(--pt-bg);
-  color: var(--pt-fg);
-}
-.pt-curve {
-  background: var(--pt-bg);
-  box-shadow: 0 0 0 1px var(--pt-rim), 0 -30px 60px -30px rgb(0 0 0 / 0.35);
-}
-/* The page moves with the panel: the old one drifts away beneath it, the new one glides
-   in as it pulls off. Mirrored when going back (pt-back). Transform/opacity only. */
+/* Page transition (page-transition.tsx): quick and quiet. The old page fades and lifts
+   a touch, the new page fades up into place; pt-back reverses the direction. */
 html.pt-leaving main.page-content {
-  transform: translate3d(0, -6vh, 0) scale(0.97);
-  opacity: 0.35;
+  opacity: 0;
+  transform: translate3d(0, -10px, 0);
   transition:
-    transform 0.8s cubic-bezier(0.76, 0, 0.24, 1),
-    opacity 0.8s cubic-bezier(0.76, 0, 0.24, 1);
+    opacity 0.18s ease-in,
+    transform 0.18s ease-in;
 }
 html.pt-leaving.pt-back main.page-content {
-  transform: translate3d(0, 6vh, 0) scale(0.97);
+  transform: translate3d(0, 10px, 0);
 }
 html.pt-enter-from main.page-content {
-  transform: translate3d(0, 9vh, 0);
   opacity: 0;
+  transform: translate3d(0, 14px, 0);
   transition: none;
 }
 html.pt-enter-from.pt-back main.page-content {
-  transform: translate3d(0, -9vh, 0);
+  transform: translate3d(0, -14px, 0);
 }
 html.pt-entering main.page-content {
   transition:
-    transform 1s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.7s ease-out;
+    opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Thin progress line across the top while the next page loads. */
+.pt-progress {
+  height: 100%;
+  width: 100%;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, transparent, var(--foreground));
+  opacity: 0;
+}
+.pt-progress-run {
+  opacity: 0.7;
+  animation: pt-progress 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.pt-progress-done {
+  transform: scaleX(1);
+  opacity: 0;
+  transition: opacity 0.3s ease 0.1s;
+}
+@keyframes pt-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(0.85); }
 }
 
 /* Sun/moon swap: the new icon spins and grows in. */
