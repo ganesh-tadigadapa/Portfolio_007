@@ -6,10 +6,12 @@ import { useEffect, type ComponentProps, type MouseEvent } from "react";
 import { flushSync } from "react-dom";
 
 /**
- * Page changes from the header nav use the View Transitions API with a "card stack"
- * animation (styled in globals.css under html[data-vt="nav"]): the current page sinks
- * back — shrinks, dims, rounds its corners — while the new page rises from the bottom
- * like a sheet. The header stays put above both. Deliberately unlike the theme toggle's
+ * Page changes from the header nav use the View Transitions API, with a different
+ * full-screen animation per destination (styled in globals.css under html[data-vt]):
+ *   /          "iris"    — a circle opens from the exact point you clicked
+ *   /about     "curtain" — the new page parts open from the centre, like curtains
+ *   /projects  "sheet"   — the old page sinks back while the new one rises from below
+ * The header stays put above all of them. Deliberately unlike the theme toggle's
  * diagonal sweep.
  *
  * Browsers without View Transitions, and people who prefer reduced motion, get a normal
@@ -17,6 +19,12 @@ import { flushSync } from "react-dom";
  */
 
 let finishNavigation: (() => void) | null = null;
+
+const VARIANTS: Record<string, "iris" | "curtain" | "sheet"> = {
+  "/": "iris",
+  "/about": "curtain",
+  "/projects": "sheet",
+};
 
 /** Mount once (in the layout): tells a pending transition that the new page rendered. */
 export function PageTransitionListener() {
@@ -48,7 +56,12 @@ export function TransitionLink({ href, onClick, ...props }: ComponentProps<typeo
 
     e.preventDefault();
     const html = document.documentElement;
-    html.dataset.vt = "nav";
+    html.dataset.vt = VARIANTS[href] ?? "sheet";
+    // Where the click happened (the iris opens from here).
+    const x = e.clientX || window.innerWidth / 2;
+    const y = e.clientY || 0;
+    html.style.setProperty("--vt-x", `${x}px`);
+    html.style.setProperty("--vt-y", `${y}px`);
 
     const transition = document.startViewTransition(
       () =>
