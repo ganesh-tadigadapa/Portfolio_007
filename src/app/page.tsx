@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { GitHubContributions } from "@/components/home/github-contributions";
 import { Hero } from "@/components/home/hero";
+import { NowPlaying } from "@/components/home/now-playing";
 import { GitaQuote } from "@/components/home/gita-quote";
 import { PhotoStrip } from "@/components/home/photo-strip";
 import { VisitorCount } from "@/components/home/visitor-count";
@@ -32,6 +33,7 @@ export default function HomePage() {
         <GitHubContributions />
       </Suspense>
       <PhotoStrip />
+      <NowPlaying />
       <GitaQuote />
       <VisitorCount />
     </div>

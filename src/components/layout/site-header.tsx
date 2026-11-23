@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { House, MagnifyingGlass } from "@phosphor-icons/react";
 import { headerNav } from "@/config/navigation";
 import { cn } from "@/lib/utils";
+import { SoundToggle } from "@/components/layout/sound-toggle";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass";
 
@@ -63,7 +64,10 @@ export function SiteHeader() {
 
             <div className="hidden h-4 w-px bg-border sm:block" />
 
-            <ThemeToggle />
+            <div className="flex items-center gap-0.5">
+              <SoundToggle />
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
