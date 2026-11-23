@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { rotatingTitles } from "@/config/quote";
+import { rotatingTitles } from "@/config/hero";
 
 export function RotatingTitle() {
   const [index, setIndex] = useState(0);

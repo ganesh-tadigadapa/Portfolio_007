@@ -8,7 +8,7 @@ My personal portfolio: projects, tech stack, GitHub activity and a bit about me.
 
 | Page | Path |
 |------|------|
-| Home: hero, tech stack, featured projects, GitHub activity, quote and visitor count | `/` |
+| Home: hero, tech stack, featured projects, GitHub activity, photos and visitor count | `/` |
 | About | `/about` |
 | Projects | `/projects` |
 | Project detail | `/projects/[slug]` |
@@ -32,12 +32,11 @@ Almost everything lives in `src/config/`:
 
 | File | What's in it |
 |------|--------------|
-| `hero.ts` | Name, bio, email, location, social links |
+| `hero.ts` | Name, bio, email, location, social links, rotating titles |
 | `meta.ts` | Site title, description, URL, GitHub username |
 | `about.ts` | About page story, principles and links |
 | `projects.ts` | Project cards (GitHub link, live link, cover, tech) |
 | `tech-stack.ts` | Home page tech icons |
-| `quote.ts` | Quote and the rotating titles under my name |
 | `navigation.ts` | Header, footer and command palette links |
 
 - **Project covers:** put images in `public/assets/projects/` and set `cover` in `projects.ts`.
@@ -55,7 +54,7 @@ src/
 │   └── api/visitors/     visitor counter endpoint
 ├── components/
 │   ├── layout/           header, footer, command palette, theme toggle, page container
-│   ├── home/             home page sections: hero, tech stack, GitHub graph, quote card
+│   ├── home/             home page sections: hero, tech stack, GitHub graph, photo strip, visitor count
 │   ├── projects/         project cards and covers
 │   ├── effects/          loading intro (0–100% counter) and scroll animations
 │   ├── shared/           small pieces used on several pages

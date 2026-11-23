@@ -26,3 +26,13 @@ export const socialLinks = [
     icon: "mail" as const,
   },
 ];
+
+// The titles that rotate under the name in the hero.
+export const rotatingTitles = [
+  "Full Stack Developer",
+  "Cloud & DevOps Enthusiast",
+  "Backend Engineer",
+  "CS Student @ LPU",
+  "Curious Builder",
+  "Always ready to learn new things",
+];
