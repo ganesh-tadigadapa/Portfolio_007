@@ -37,19 +37,19 @@ export function Hero() {
       <div className="flex flex-col gap-5">
         <div
           data-reveal="unveil"
-          className="relative h-[calc(var(--grid-cell-size)*4.5)]"
+          className="relative aspect-[2/1]"
         >
           <div className="relative size-full overflow-hidden rounded-2xl border border-foreground/10 shadow-[0_8px_30px_-12px_rgb(0_0_0/0.45)]">
-          {/* Same banner size as the original (Virat) one; the close-up is cropped to it,
-              framed on his head and back. Other images kept in public/assets:
-              header.jpeg (Virat), header-wide.jpg (3:1 wide scene). */}
+          {/* Banner option C: 2:1 (720 x 360 on a laptop), him big, head to about the
+              knees. Other images kept in public/assets: header.jpeg (Virat),
+              header-wide.jpg (3:1 wide scene). */}
           <Image
             src="/assets/header-close.jpg"
             alt="Header banner"
             fill
             priority
             sizes="(max-width: 640px) 100vw, 720px"
-            className="hero-parallax object-cover object-[50%_26%]"
+            className="hero-parallax object-cover object-[50%_30%]"
           />
           <div className="absolute inset-0 bg-black/10" />
           </div>
