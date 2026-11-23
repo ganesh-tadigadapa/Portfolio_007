@@ -615,23 +615,14 @@ html[data-vt="curtain"]::view-transition-old(root) {
 .theme-icon-in { animation: theme-icon-in 600ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 @media (prefers-reduced-motion: reduce) { .theme-icon-in { animation: none; } }
 
-/* Photo marquee: the track holds the list twice and slides left by one copy, forever.
-   Pauses on hover/focus; with reduced motion it turns into a plain swipeable row. */
-@keyframes marquee-drift {
-  from { transform: translateX(0); }
-  to { transform: translateX(calc(-50% - 0.375rem)); } /* half the track + half the gap (gap-3) */
-}
+/* Photo marquee: the track holds the list twice; photo-strip.tsx moves it frame by
+   frame (base drift, scroll push, eased hover stop). With reduced motion it becomes a
+   plain swipeable row. */
 .marquee-track {
-  animation: marquee-drift linear infinite;
   will-change: transform;
-}
-.marquee:hover .marquee-track,
-.marquee:focus-within .marquee-track {
-  animation-play-state: paused;
 }
 @media (prefers-reduced-motion: reduce) {
   .marquee { overflow-x: auto; scrollbar-width: none; }
-  .marquee-track { animation: none; }
 }
 
 /* Song card record: vinyl grooves with a light sheen; spins while playing. */

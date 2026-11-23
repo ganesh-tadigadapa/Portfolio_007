@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Container } from "@/components/layout/container";
 import { SongCard } from "@/components/home/song-card";
 import { SectionHeading } from "@/components/shared/section-heading";
@@ -33,6 +33,9 @@ export function PhotoStrip() {
   // Server render uses the configured order; each visit then gets a fresh shuffle.
   const [photos, setPhotos] = useState<Photo[]>(photosConfig.photos);
   useEffect(() => setPhotos(shuffleApart(photosConfig.photos)), []);
+  const regionRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLUListElement>(null);
+  useMarquee(regionRef, trackRef);
 
   if (photosConfig.photos.length === 0) return null;
 
@@ -44,16 +47,13 @@ export function PhotoStrip() {
       </p>
 
       <div
+        ref={regionRef}
         tabIndex={0}
         role="region"
         aria-label="Photographs"
         className="marquee relative mt-6 overflow-hidden focus-visible:outline-none"
       >
-        <ul
-          className="marquee-track flex w-max gap-3"
-          // About 6s per photo: slow enough to read the quotes.
-          style={{ animationDuration: `${photos.length * 6}s` }}
-        >
+        <ul ref={trackRef} className="marquee-track flex w-max gap-3">
           {[0, 1].map((copy) =>
             photos.map((photo, i) => (
               <li
@@ -101,4 +101,88 @@ export function PhotoStrip() {
       <SongCard />
     </Container>
   );
+}
+
+/**
+ * Drives the photo marquee by hand (one transform per frame) so it can feel alive:
+ * - a calm base drift to the left
+ * - page scrolling pushes it: scrolling down speeds it up, scrolling up nudges it back
+ * - hover or keyboard focus eases it to a stop, and leaving eases it back to speed
+ * Speed always glides toward its target, so nothing ever jumps. It only runs while the
+ * strip is on screen, and not at all with reduced motion (then it's a swipeable row).
+ */
+function useMarquee(
+  regionRef: React.RefObject<HTMLDivElement | null>,
+  trackRef: React.RefObject<HTMLUListElement | null>,
+) {
+  useEffect(() => {
+    const region = regionRef.current;
+    const track = trackRef.current;
+    if (!region || !track) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const BASE = 38; // px per second
+    let x = 0;
+    let speed = BASE;
+    let held = false;
+    let visible = false;
+    let raf = 0;
+    let last = 0;
+    let lastScroll = window.scrollY;
+    let push = 0; // extra speed from page scrolling, decays away
+
+    const loop = (now: number) => {
+      const dt = Math.min(0.05, (now - (last || now)) / 1000);
+      last = now;
+
+      const scrolled = window.scrollY - lastScroll;
+      lastScroll = window.scrollY;
+      push = Math.max(-700, Math.min(900, push + scrolled * 9)); // down → faster left; up → drifts back
+      push *= Math.pow(0.04, dt); // fade the push out over ~half a second
+
+      const target = held ? 0 : BASE + push;
+      speed += (target - speed) * Math.min(1, dt * (held ? 5 : 3.5));
+
+      // One copy of the list (+ its trailing gap) is exactly half the track.
+      const loopWidth = track.scrollWidth / 2 + 6;
+      x = (((x - speed * dt) % loopWidth) - loopWidth) % loopWidth;
+      track.style.transform = `translate3d(${x}px, 0, 0)`;
+
+      raf = requestAnimationFrame(loop);
+    };
+
+    const start = () => {
+      if (raf) return;
+      last = 0;
+      lastScroll = window.scrollY;
+      raf = requestAnimationFrame(loop);
+    };
+    const stop = () => {
+      cancelAnimationFrame(raf);
+      raf = 0;
+    };
+
+    const io = new IntersectionObserver(([entry]) => {
+      visible = entry!.isIntersecting;
+      if (visible) start();
+      else stop();
+    });
+    io.observe(region);
+
+    const hold = () => (held = true);
+    const release = () => (held = false);
+    region.addEventListener("pointerenter", hold);
+    region.addEventListener("pointerleave", release);
+    region.addEventListener("focusin", hold);
+    region.addEventListener("focusout", release);
+
+    return () => {
+      stop();
+      io.disconnect();
+      region.removeEventListener("pointerenter", hold);
+      region.removeEventListener("pointerleave", release);
+      region.removeEventListener("focusin", hold);
+      region.removeEventListener("focusout", release);
+    };
+  }, [regionRef, trackRef]);
 }
