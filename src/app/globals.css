@@ -478,3 +478,13 @@ html.intro-lock body {
     transition-delay: 0s !important;
   }
 }
+
+/* Theme toggle: the circular reveal is driven from JS (theme-toggle.tsx); switch off
+   the default cross-fade so only the expanding circle shows. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2; }

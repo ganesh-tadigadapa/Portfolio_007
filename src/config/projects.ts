@@ -49,7 +49,7 @@ export const projects: Project[] = [
     href: "https://github.com/ganesh-tadigadapa/vautify",
     website: "https://vault-store-865.netlify.app/",
     featured: true,
-    cover: "/assets/projects/vautify.jpg",
+    cover: "/assets/projects/vautify.webp",
     gradient: "from-blue-500/25 via-indigo-500/15 to-slate-500/20",
   },
   {

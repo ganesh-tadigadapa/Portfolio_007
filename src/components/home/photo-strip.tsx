@@ -74,11 +74,13 @@ export function PhotoStrip() {
                       className="h-full w-auto max-w-none transition-[filter,transform] duration-500 hover:scale-[1.03] dark:brightness-90 dark:hover:brightness-100"
                     />
                   </div>
-                  <figcaption
-                    title={photo.caption}
-                    className="mt-2 w-0 min-w-full truncate font-mono text-xs text-secondary"
-                  >
-                    {photo.caption}
+                  <figcaption className="mt-2 w-0 min-w-full">
+                    <span className="line-clamp-3 text-[12.5px] italic leading-snug text-foreground/85">
+                      &ldquo;{photo.quote}&rdquo;
+                    </span>
+                    <span className="mt-0.5 block truncate font-mono text-[11px] uppercase tracking-wider text-secondary">
+                      {photo.caption}
+                    </span>
                   </figcaption>
                 </figure>
               </li>
