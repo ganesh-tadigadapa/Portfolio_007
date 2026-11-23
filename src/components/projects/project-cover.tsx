@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { Project } from "@/config/projects";
 import { cn } from "@/lib/utils";
+import { HoverPreview } from "@/components/projects/hover-preview";
 
 /**
  * A project's cover: its screenshot when there is one, otherwise a designed
@@ -15,7 +16,7 @@ export function ProjectCover({
   className,
   imageClassName,
 }: {
-  project: Pick<Project, "title" | "cover" | "gradient" | "tech">;
+  project: Pick<Project, "title" | "cover" | "preview" | "gradient" | "tech">;
   sizes: string;
   priority?: boolean;
   /** Let ScrollReveal settle the image from a slight zoom when it appears */
@@ -35,6 +36,7 @@ export function ProjectCover({
           data-reveal-media={revealMedia || undefined}
           className={cn("object-cover object-top", imageClassName)}
         />
+        {project.preview && <HoverPreview src={project.preview} title={project.title} />}
       </div>
     );
   }
