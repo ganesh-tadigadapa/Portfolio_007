@@ -10,7 +10,7 @@ import { getTechIcon } from "@/lib/tech-icons";
 export function TechStackGrid() {
   return (
     <Container>
-      <SectionHeading title="Tech Stack" uppercase />
+      <SectionHeading eyebrow="Toolbox" title="Tech I build with" />
       <div data-reveal-stagger="35" className="flex flex-wrap gap-3">
         {techStack.map((name) => {
           const icon = getTechIcon(name);

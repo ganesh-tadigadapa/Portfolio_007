@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { GitHubContributions } from "@/components/home/github-contributions";
 import { Hero } from "@/components/home/hero";
+import { Highlights } from "@/components/home/highlights";
+import { ContactCta } from "@/components/home/contact-cta";
 import { PhotoStrip } from "@/components/home/photo-strip";
 import { VisitorCount } from "@/components/home/visitor-count";
 import { TechStack } from "@/components/home/tech-stack";
@@ -18,6 +20,9 @@ export default function HomePage() {
   return (
     <div className="space-y-12 pb-24 sm:space-y-16 sm:pb-20">
       <Hero />
+      <Suspense fallback={<div className="mx-auto h-28 max-w-3xl rounded-xl bg-muted/40" />}>
+        <Highlights />
+      </Suspense>
       <TechStack />
       <ProjectsGrid limit={2} showViewAll />
       <Suspense
@@ -31,6 +36,7 @@ export default function HomePage() {
         <GitHubContributions />
       </Suspense>
       <PhotoStrip />
+      <ContactCta />
       <VisitorCount />
     </div>
   );

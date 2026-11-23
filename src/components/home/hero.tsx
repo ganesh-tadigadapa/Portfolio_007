@@ -3,7 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  ArrowRight,
   CalendarBlank,
+  GraduationCap,
+  MapPin,
   EnvelopeSimple,
   FileText,
   GithubLogo,
@@ -69,12 +72,36 @@ export function Hero() {
             <div data-reveal="blur">
               <RotatingTitle />
             </div>
-            <div data-reveal className="mt-3 flex flex-wrap items-center gap-2">
+            <div data-reveal className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-secondary sm:text-sm">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-medium text-emerald-700 dark:text-emerald-400">
+                <span className="relative flex size-1.5">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+                  <span className="relative inline-flex size-1.5 rounded-full bg-emerald-500" />
+                </span>
+                Open to opportunities
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="size-3.5" weight="bold" />
+                {heroConfig.location}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <GraduationCap className="size-3.5" weight="bold" />
+                CS @ Lovely Professional University
+              </span>
+            </div>
+            <div data-reveal className="mt-4 flex flex-wrap items-center gap-2">
+              <Link
+                href="/projects"
+                className="group/cta inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-90 sm:text-sm"
+              >
+                View projects
+                <ArrowRight className="size-3.5 transition-transform group-hover/cta:translate-x-0.5 sm:size-4" weight="bold" />
+              </Link>
               <Link
                 href={heroConfig.calendarUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3.5 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-90 sm:text-sm"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted sm:text-sm"
               >
                 <CalendarBlank className="size-3.5 sm:size-4" weight="bold" />
                 Book a call

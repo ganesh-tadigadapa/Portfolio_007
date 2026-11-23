@@ -18,7 +18,7 @@ export function RotatingTitle() {
       {rotatingTitles.map((title, i) => (
         <p
           key={title}
-          className="absolute inset-0 text-sm font-medium tracking-wide text-secondary transition-all duration-700 ease-in-out sm:text-base"
+          className="absolute inset-0 text-sm font-medium tracking-wide text-foreground/75 transition-all duration-700 ease-in-out sm:text-base"
           style={{
             opacity: i === index ? 1 : 0,
             transform: i === index ? "translateY(0)" : "translateY(14px)",

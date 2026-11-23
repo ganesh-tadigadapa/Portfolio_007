@@ -120,7 +120,7 @@ export function ProjectsGrid({
   return (
     <Container>
       {showHeading && (
-        <SectionHeading title="Featured Projects" uppercase />
+        <SectionHeading eyebrow="Selected work" title="Featured projects" />
       )}
 
       <div className="grid gap-5 sm:grid-cols-2">

@@ -62,7 +62,7 @@ export function PhotoStrip() {
 
   return (
     <Container>
-      <SectionHeading title={photosConfig.title} />
+      <SectionHeading eyebrow="Off the clock" title={photosConfig.title} />
       <p data-reveal className="text-secondary">
         {photosConfig.description}
       </p>

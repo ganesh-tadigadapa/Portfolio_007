@@ -67,7 +67,7 @@ export async function GitHubContributions() {
 
   return (
     <Container>
-      <SectionHeading title="GitHub Activity" uppercase />
+      <SectionHeading eyebrow="Consistency" title="GitHub activity" />
       <div className="animate-in-up-on-view">
         <div className="overflow-x-auto pb-1">
           <div style={{ minWidth: `${gridWidth}px` }}>
