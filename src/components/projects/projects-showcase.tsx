@@ -7,12 +7,16 @@ import {
   Globe,
   X,
 } from "@phosphor-icons/react";
-import { AnimatePresence, motion, type Transition } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  useIsPresent,
+  type Transition,
+} from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { HoverPreview } from "@/components/projects/hover-preview";
 import { TechIcon, techTileClass } from "@/components/shared/tech-icon";
 import type { Project } from "@/config/projects";
 import { getTechIcon } from "@/lib/tech-icons";
@@ -29,9 +33,9 @@ import { cn } from "@/lib/utils";
 
 const spring: Transition = {
   type: "spring",
-  stiffness: 260,
-  damping: 30,
-  mass: 0.9,
+  stiffness: 420,
+  damping: 40,
+  mass: 0.8,
 };
 
 export function ProjectsShowcase({ projects }: { projects: Project[] }) {
@@ -48,20 +52,26 @@ export function ProjectsShowcase({ projects }: { projects: Project[] }) {
 
   const close = useCallback(() => {
     window.clearTimeout(closeTimer.current);
-    cooldownUntil.current = Date.now() + 700;
+    cooldownUntil.current = Date.now() + 450;
     setOpen(null);
   }, []);
   const hoverOpen = useCallback((p: Project) => {
     window.clearTimeout(openTimer.current);
-    if (Date.now() < cooldownUntil.current) return;
-    openTimer.current = window.setTimeout(() => setOpen(p), 450);
+    const wait = Math.max(0, cooldownUntil.current - Date.now());
+    openTimer.current = window.setTimeout(() => setOpen(p), wait + 380);
   }, []);
-  const cancelHoverOpen = useCallback(() => window.clearTimeout(openTimer.current), []);
+  const cancelHoverOpen = useCallback(
+    () => window.clearTimeout(openTimer.current),
+    [],
+  );
   const leaveArticle = useCallback(() => {
     window.clearTimeout(closeTimer.current);
     closeTimer.current = window.setTimeout(close, 250);
   }, [close]);
-  const enterArticle = useCallback(() => window.clearTimeout(closeTimer.current), []);
+  const enterArticle = useCallback(
+    () => window.clearTimeout(closeTimer.current),
+    [],
+  );
   useEffect(
     () => () => {
       window.clearTimeout(openTimer.current);
@@ -109,18 +119,7 @@ export function ProjectsShowcase({ projects }: { projects: Project[] }) {
         createPortal(
           <>
             <AnimatePresence>
-              {open && (
-                <motion.div
-                  key="backdrop"
-                  data-lenis-prevent
-                  className="fixed inset-0 z-[60] bg-black/55 backdrop-blur-md"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  onClick={close}
-                />
-              )}
+              {open && <Backdrop key="backdrop" onClose={close} />}
             </AnimatePresence>
 
             <AnimatePresence>
@@ -138,6 +137,25 @@ export function ProjectsShowcase({ projects }: { projects: Project[] }) {
           document.body,
         )}
     </>
+  );
+}
+
+/** Dims the page. While fading out it lets the pointer through to the cards. */
+function Backdrop({ onClose }: { onClose: () => void }) {
+  const isPresent = useIsPresent();
+  return (
+    <motion.div
+      data-lenis-prevent
+      className={cn(
+        "fixed inset-0 z-[60] bg-black/70",
+        !isPresent && "pointer-events-none",
+      )}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.22 }}
+      onClick={onClose}
+    />
   );
 }
 
@@ -203,9 +221,6 @@ function CollapsedCard({
             className={cn("absolute inset-0 bg-linear-to-br", project.gradient)}
           />
         )}
-        {project.preview && (
-          <HoverPreview src={project.preview} title={project.title} />
-        )}
       </motion.div>
 
       {/* Legibility: a dark fade under the text. */}
@@ -244,6 +259,8 @@ function ExpandedCard({
   onPointerEnter: () => void;
   onPointerLeave: () => void;
 }) {
+  // While it shrinks back into its card, let the pointer pass through to the card.
+  const isPresent = useIsPresent();
   return (
     <div
       data-lenis-prevent
@@ -257,7 +274,10 @@ function ExpandedCard({
         aria-label={project.title}
         onPointerEnter={(e) => e.pointerType === "mouse" && onPointerEnter()}
         onPointerLeave={(e) => e.pointerType === "mouse" && onPointerLeave()}
-        className="pointer-events-auto relative flex max-h-[calc(100dvh-24px)] w-full max-w-[720px] flex-col overflow-hidden border border-foreground/10 bg-card shadow-[0_40px_120px_-30px_rgba(0,0,0,0.8)] sm:max-h-[88vh]"
+        className={cn(
+          isPresent ? "pointer-events-auto" : "pointer-events-none",
+          "relative flex will-change-transform max-h-[calc(100dvh-24px)] w-full max-w-[720px] flex-col overflow-hidden border border-foreground/10 bg-card shadow-[0_40px_120px_-30px_rgba(0,0,0,0.8)] sm:max-h-[88vh]",
+        )}
         style={{ borderRadius: 26 }}
       >
         <div
@@ -297,7 +317,7 @@ function ExpandedCard({
                   className="absolute inset-0 size-full object-cover object-top"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.35, duration: 0.5 }}
+                  transition={{ delay: 0.45, duration: 0.4 }}
                 />
               )}
             </motion.div>
