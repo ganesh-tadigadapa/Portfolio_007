@@ -23,7 +23,7 @@ export const projects: Project[] = [
     href: "https://github.com/ganesh-tadigadapa/Zenkai",
     website: "https://getzenkai.vercel.app",
     featured: true,
-    cover: "/assets/projects/zenkai.png",
+    cover: "/assets/projects/zenkai.jpg",
     gradient: "from-blue-500/25 via-indigo-500/15 to-violet-500/25",
   },
   {
@@ -60,7 +60,7 @@ export const projects: Project[] = [
     href: "https://github.com/ganesh-tadigadapa/lpu-nexus",
     website: "https://lpunexus.netlify.app/",
     featured: true,
-    cover: "/assets/projects/lpu-nexus.png",
+    cover: "/assets/projects/lpu-nexus.jpg",
     gradient: "from-amber-500/20 via-orange-500/15 to-red-500/20",
   },
   {
@@ -72,6 +72,7 @@ export const projects: Project[] = [
     tech: ["React", "Node.js", "MongoDB", "Gemini"],
     href: "https://github.com/ganesh-tadigadapa/Splitly",
     website: "https://splitly-pied.vercel.app/",
+    cover: "/assets/projects/splitly.jpg",
     gradient: "from-indigo-500/25 via-slate-500/15 to-fuchsia-500/20",
   },
   {
@@ -83,7 +84,7 @@ export const projects: Project[] = [
     tech: ["TypeScript", "FastAPI", "Python", "Docker"],
     href: "https://github.com/ganesh-tadigadapa/Snipex",
     website: "https://zekrom-09tu.onrender.com/",
-    cover: "/assets/projects/snipex.png",
+    cover: "/assets/projects/snipex.jpg",
     gradient: "from-violet-500/25 via-purple-500/15 to-fuchsia-500/25",
   },
   {
@@ -95,7 +96,7 @@ export const projects: Project[] = [
     tech: ["JavaScript", "HTML", "CSS"],
     href: "https://github.com/ganesh-tadigadapa/thread_visualize",
     website: "https://threadvisualize.netlify.app",
-    cover: "/assets/projects/thread-visualize.png",
+    cover: "/assets/projects/thread-visualize.jpg",
     gradient: "from-slate-500/20 via-zinc-500/15 to-sky-500/20",
   },
 ];
