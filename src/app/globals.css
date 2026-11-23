@@ -515,7 +515,7 @@ html.intro-lock body {
    Pauses on hover/focus; with reduced motion it turns into a plain swipeable row. */
 @keyframes marquee-drift {
   from { transform: translateX(0); }
-  to { transform: translateX(calc(-50% - 0.625rem)); } /* half the track + half the gap */
+  to { transform: translateX(calc(-50% - 0.375rem)); } /* half the track + half the gap (gap-3) */
 }
 .marquee-track {
   animation: marquee-drift linear infinite;

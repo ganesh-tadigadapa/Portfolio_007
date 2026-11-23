@@ -111,5 +111,14 @@ export const photosConfig = {
       width: 876,
       height: 1400,
     },
+    {
+      src: "/assets/photos/wing-golden-hour.jpg",
+      alt: "An aeroplane wing above the clouds at golden hour, a band of warm light along the horizon under a deep blue sky.",
+      caption: "Window seat",
+      quote: "Some of my best frames were taken at 35,000 feet.",
+      group: "sky",
+      width: 1049,
+      height: 1400,
+    },
   ] satisfies Photo[],
 };
