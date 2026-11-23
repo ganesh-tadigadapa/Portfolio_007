@@ -37,26 +37,18 @@ export function Hero() {
       <div className="flex flex-col gap-5">
         <div
           data-reveal="unveil"
-          className="relative h-[calc(var(--grid-cell-size)*4.5)]"
+          className="relative h-[calc(var(--grid-cell-size)*4.5)] sm:h-[calc(var(--grid-cell-size)*6)]"
         >
           <div className="relative size-full overflow-hidden rounded-2xl border border-foreground/10 shadow-[0_8px_30px_-12px_rgb(0_0_0/0.45)]">
-          {/* Temporary banner trial (previous: /assets/header.jpeg). The whole image is
-              shown, with a blurred, darkened copy of itself filling the sides. */}
+          {/* Banner is 3:1 on desktop (720 x 240), filled edge to edge. Previous banner:
+              /assets/header.jpeg. */}
           <Image
-            src="/assets/header-anime.jpg"
-            alt=""
-            aria-hidden
-            fill
-            sizes="(max-width: 640px) 100vw, 720px"
-            className="scale-110 object-cover blur-xl brightness-[0.55]"
-          />
-          <Image
-            src="/assets/header-anime.jpg"
+            src="/assets/header-wide.jpg"
             alt="Header banner"
             fill
             priority
             sizes="(max-width: 640px) 100vw, 720px"
-            className="hero-parallax object-contain"
+            className="hero-parallax object-cover"
           />
           <div className="absolute inset-0 bg-black/10" />
           </div>

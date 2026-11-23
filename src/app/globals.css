@@ -202,18 +202,18 @@ html.reveal-pending main [data-reveal-stagger] > * {
   }
 }
 
-/* Hero banner: zoomed slightly about a point near the top, which crops the
-   ad boards along the photo's bottom edge on every screen width. */
+/* Hero banner: the image already fits (3:1), so only a whisker of zoom, just
+   enough headroom for the scroll drift below without showing an edge. */
 .hero-parallax {
-  --hero-zoom: 1.2;
+  --hero-zoom: 1.03;
+  --hero-drift: 3px;
   transform: scale(var(--hero-zoom));
-  transform-origin: 50% 25%;
+  transform-origin: 50% 50%;
 }
 
 @media (max-width: 639px) {
   .hero-parallax {
-    --hero-zoom: 1.42;
-    transform-origin: 50% 18%;
+    --hero-zoom: 1.05;
   }
 }
 
@@ -233,7 +233,7 @@ html.reveal-pending main [data-reveal-stagger] > * {
     transform: scale(var(--hero-zoom)) translateY(0);
   }
   to {
-    transform: scale(var(--hero-zoom)) translateY(14px);
+    transform: scale(var(--hero-zoom)) translateY(var(--hero-drift, 14px));
   }
 }
 
