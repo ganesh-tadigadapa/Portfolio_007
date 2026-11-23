@@ -57,7 +57,7 @@ src/
 │   ├── layout/           header, footer, command palette, theme toggle, page container
 │   ├── home/             home page sections: hero, tech stack, GitHub graph, quote card
 │   ├── projects/         project cards and covers
-│   ├── effects/          loading intro (with ember sparks) and scroll animations
+│   ├── effects/          loading intro (0–100% counter) and scroll animations
 │   ├── shared/           small pieces used on several pages
 │   └── ui/               base UI: button, tooltip, glass card
 ├── config/               all the content (see above)

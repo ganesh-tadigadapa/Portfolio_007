@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { startEmbers } from "@/components/effects/embers";
 
 /**
  * Full-screen intro shown on the first page load of a browser tab.
@@ -46,8 +45,6 @@ export function SiteIntro() {
   const numRef = useRef<HTMLSpanElement>(null);
   const fillRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef<HTMLSpanElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const glowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -62,7 +59,6 @@ export function SiteIntro() {
     const num = numRef.current!;
     const fill = fillRef.current!;
     const tagState = stateRef.current!;
-    const glow = glowRef.current!;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timers: number[] = [];
@@ -71,14 +67,6 @@ export function SiteIntro() {
     let disposed = false;
 
     html.classList.add("intro-lock");
-
-    /* ---- the fire: sparks rise from the bottom and fly off the bar's tip ---- */
-    const embers = reduced ? null : startEmbers(canvasRef.current!);
-    const fireAt = (progress: number) => {
-      embers?.setIntensity(progress);
-      glow.style.opacity = (0.3 + progress * 0.7).toFixed(3);
-    };
-    fireAt(0);
 
     /* ---- rotating word, characters staggered in and out ---- */
     // Two frames so the hidden state is painted before the reveal transition starts.
@@ -148,11 +136,6 @@ export function SiteIntro() {
 
       num.textContent = String(Math.floor(shown));
       fill.style.width = `${shown.toFixed(2)}%`;
-      fireAt(shown / 100);
-      if (embers && shown > 1) {
-        const tip = fill.getBoundingClientRect();
-        embers.setSource(tip.right, tip.top + tip.height / 2);
-      }
 
       // done once the real signals are in AND the counter has caught up
       if (elapsed >= MIN_MS && target >= 100 && shown >= 99.4) return complete();
@@ -174,16 +157,6 @@ export function SiteIntro() {
       num.textContent = "100";
       fill.style.width = "100%";
       tagState.textContent = "ready";
-
-      // the fire flares: a shower off the full bar and the number
-      fireAt(1);
-      if (embers) {
-        embers.setSource(null);
-        const bar = fill.getBoundingClientRect();
-        for (let i = 0; i <= 8; i++) embers.burst(bar.left + (bar.width * i) / 8, bar.top, 14, 0.9);
-        const digits = num.getBoundingClientRect();
-        embers.burst(digits.left + digits.width / 2, digits.top + digits.height * 0.6, 70, 1.3);
-      }
 
       kanji.classList.add("il-gone");
       meaning.classList.remove("il-show");
@@ -215,7 +188,6 @@ export function SiteIntro() {
 
     return () => {
       disposed = true;
-      embers?.stop();
       cancelAnimationFrame(raf);
       clearInterval(wordTimer);
       timers.forEach(clearTimeout);
@@ -231,8 +203,6 @@ export function SiteIntro() {
 
   return (
     <div ref={rootRef} className="site-intro" aria-hidden="true">
-      <div ref={glowRef} className="il-glow" />
-      <canvas ref={canvasRef} className="il-embers" />
       <span className="il-tag il-tl">{TAGS.tl}</span>
       <span ref={stateRef} className="il-tag il-tr">
         assets

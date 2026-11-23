@@ -247,12 +247,12 @@ html.intro-lock body {
 }
 
 .site-intro {
-  /* always dark, in both themes: embers need a night sky */
-  --il-bg: #0a0908;
-  --il-fg: #f6f1ea;
-  --il-muted: #8a8079;
-  --il-dim: #4a4440;
-  --il-track: #221d1a;
+  /* always dark, in both themes */
+  --il-bg: #0b0b0d;
+  --il-fg: #f4f4f2;
+  --il-muted: #6d6d73;
+  --il-dim: #37373d;
+  --il-track: #1c1c20;
   --il-ease: cubic-bezier(0.16, 1, 0.3, 1);
   --il-ease-io: cubic-bezier(0.76, 0, 0.24, 1);
 
@@ -269,46 +269,6 @@ html.intro-lock body {
   -webkit-font-smoothing: antialiased;
   clip-path: inset(0 0 0 0);
   transition: clip-path 1.15s var(--il-ease-io);
-}
-
-/* warm firelight rising from below; brightens with progress (opacity set in JS) */
-.site-intro .il-glow {
-  position: absolute;
-  inset: auto -20% -12vh;
-  height: 62vh;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 38% 42% at 50% 100%, rgb(255 160 70 / 0.34), transparent 72%),
-    radial-gradient(ellipse 70% 80% at 50% 100%, rgb(200 60 12 / 0.28), transparent 74%),
-    radial-gradient(ellipse 95% 100% at 50% 100%, rgb(110 20 4 / 0.25), transparent 78%);
-  animation: il-firelight 2.6s ease-in-out infinite alternate;
-  transition: opacity 0.3s linear;
-}
-
-@keyframes il-firelight {
-  0% { transform: scaleX(1) translateY(0); filter: brightness(1); }
-  35% { transform: scaleX(1.04) translateY(-1.5%); filter: brightness(1.12); }
-  60% { transform: scaleX(0.98) translateY(0.5%); filter: brightness(0.94); }
-  100% { transform: scaleX(1.03) translateY(-1%); filter: brightness(1.08); }
-}
-
-.site-intro .il-embers {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.site-intro .il-inner,
-.site-intro .il-tag {
-  z-index: 1;
-}
-
-.site-intro.il-out .il-glow,
-.site-intro.il-out .il-embers {
-  opacity: 0 !important;
-  transition: opacity 0.9s ease;
 }
 
 .site-intro.il-out {
@@ -446,9 +406,33 @@ html.intro-lock body {
 .site-intro .il-bar {
   position: relative;
   width: 100%;
-  height: 2px;
-  border-radius: 2px;
+  height: 1px;
+  overflow: hidden;
   background: var(--il-track);
+}
+
+.site-intro .il-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--il-fg) 50%, transparent),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: il-sheen 2.4s var(--il-ease-io) infinite;
+}
+
+@keyframes il-sheen {
+  0% {
+    transform: translateX(-100%);
+  }
+  60%,
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .site-intro .il-fill {
@@ -457,9 +441,12 @@ html.intro-lock body {
   left: 0;
   width: 0%;
   height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, transparent, #7a1c06 18%, #d9541c 55%, #f9a35a 85%, #fff3df);
-  box-shadow: 0 0 8px rgb(249 140 70 / 0.7), 0 0 22px rgb(217 84 28 / 0.45);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--il-fg) 45%, transparent) 45%,
+    var(--il-fg)
+  );
 }
 
 .site-intro .il-label {
