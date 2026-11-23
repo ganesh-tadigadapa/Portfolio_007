@@ -40,15 +40,27 @@ export function ThemeToggle({ className }: { className?: string }) {
     });
 
     transition.ready.then(() => {
+      const ease = "cubic-bezier(0.83, 0, 0.17, 1)"; // slow start, fast middle, soft landing
+      const duration = 950;
+      // New theme: a feathered circle that floods out from the button. The mask is a
+      // soft-edged disc (see globals.css); growing its size + keeping it centred on the
+      // button gives a glowing, light-like edge instead of a hard cut.
+      const end = radius * 2.3;
       document.documentElement.animate(
         {
-          clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`],
+          maskSize: ["0px 0px", `${end}px ${end}px`],
+          maskPosition: [`${x}px ${y}px`, `${x - end / 2}px ${y - end / 2}px`],
         },
+        { duration, easing: ease, pseudoElement: "::view-transition-new(root)", fill: "both" },
+      );
+      // Old theme sinks back as it is covered: a touch smaller, rounded and dimmer.
+      document.documentElement.animate(
         {
-          duration: 650,
-          easing: "cubic-bezier(0.65, 0, 0.35, 1)",
-          pseudoElement: "::view-transition-new(root)",
+          transform: ["scale(1)", "scale(0.94)"],
+          borderRadius: ["0px", "28px"],
+          filter: ["brightness(1)", "brightness(0.55)"],
         },
+        { duration, easing: ease, pseudoElement: "::view-transition-old(root)", fill: "both" },
       );
     });
   };
@@ -68,7 +80,9 @@ export function ThemeToggle({ className }: { className?: string }) {
         className,
       )}
     >
-      {resolvedTheme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+      <span key={resolvedTheme} className="theme-icon-in inline-flex">
+        {resolvedTheme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+      </span>
     </button>
   );
 }

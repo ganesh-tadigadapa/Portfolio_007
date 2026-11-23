@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { Container } from "@/components/layout/container";
 import { SectionHeading } from "@/components/shared/section-heading";
-import { photosConfig } from "@/config/photos";
+import { photosConfig, type Photo } from "@/config/photos";
 import { cn } from "@/lib/utils";
 
 /**
@@ -13,8 +13,24 @@ import { cn } from "@/lib/utils";
  * its own aspect ratio, with a small caption underneath. The edges fade out and
  * arrow buttons appear whenever there is more to scroll in that direction.
  */
+/** Random order where no two neighbours share a group (mountains next to mountains). */
+function shuffleApart(list: Photo[]): Photo[] {
+  for (let attempt = 0; attempt < 300; attempt++) {
+    const a = [...list];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    if (a.every((p, i) => i === 0 || p.group !== a[i - 1].group)) return a;
+  }
+  return list;
+}
+
 export function PhotoStrip() {
   const scroller = useRef<HTMLDivElement>(null);
+  // Server render uses the configured order; each visit then gets a fresh shuffle.
+  const [photos, setPhotos] = useState<Photo[]>(photosConfig.photos);
+  useEffect(() => setPhotos(shuffleApart(photosConfig.photos)), []);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
 
@@ -60,7 +76,7 @@ export function PhotoStrip() {
           className="overflow-x-auto overscroll-x-contain scroll-smooth [scrollbar-width:none] focus-visible:outline-none [&::-webkit-scrollbar]:hidden"
         >
           <ul className="flex w-max gap-3">
-            {photosConfig.photos.map((photo, i) => (
+            {photos.map((photo, i) => (
               <li key={photo.src} className="shrink-0">
                 <figure>
                   <div className="h-40 overflow-hidden rounded-lg border border-border bg-muted sm:h-48">
