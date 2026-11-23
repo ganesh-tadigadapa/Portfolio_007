@@ -37,7 +37,7 @@ export const aboutConfig = {
       {
         title: "Build the fix",
         description:
-          "Zenkai, Snipex, NightShift and Splitly all started as things that annoyed me. Real problems make better projects.",
+          "Zenkai, Zekrom, NightShift and Splitly all started as things that annoyed me. Real problems make better projects.",
       },
       {
         title: "Go past the demo",
