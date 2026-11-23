@@ -31,7 +31,6 @@ export const socialLinks = [
 export const rotatingTitles = [
   "Full Stack Developer",
   "Cloud & DevOps Enthusiast",
-  "CS Student @ LPU",
   "Curious Builder",
   "Always ready to learn new things",
 ];
