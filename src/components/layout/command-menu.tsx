@@ -68,7 +68,7 @@ export function CommandMenu() {
             <X className="size-4" />
           </button>
         </div>
-        <Command.List className="max-h-80 overflow-y-auto p-2">
+        <Command.List data-lenis-prevent className="max-h-80 overflow-y-auto p-2">
           <Command.Empty className="px-4 py-8 text-center text-sm text-muted-foreground">
             No results found.
           </Command.Empty>

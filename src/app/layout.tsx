@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { siteConfig } from "@/config/meta";
 import { PersonJsonLd } from "@/components/shared/person-json-ld";
 import { ScrollReveal } from "@/components/effects/scroll-reveal";
+import { SmoothScroll } from "@/components/effects/smooth-scroll";
 import { SiteIntro, siteIntroBootScript } from "@/components/effects/site-intro";
 import "./globals.css";
 
@@ -48,6 +49,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           <TooltipProvider>
             <SiteIntro />
+            <SmoothScroll />
             <div className="relative flex min-h-screen flex-col bg-grid">
               <SiteHeader />
               <main className="page-content flex-1">{children}</main>
