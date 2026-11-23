@@ -76,8 +76,10 @@ export async function GitHubContributions() {
     <Container>
       <SectionHeading eyebrow="Consistency" title="GitHub activity" />
       <div className="animate-in-up-on-view">
-        <div className="overflow-x-auto pb-1">
-          <div style={{ minWidth: `${gridWidth}px` }}>
+        {/* dir="rtl" makes the scroller start at its right end, so the latest months
+            are what you see first; the grid itself is laid out left-to-right. */}
+        <div dir="rtl" className="overflow-x-auto pb-1 [scrollbar-width:thin]">
+          <div dir="ltr" style={{ minWidth: `${gridWidth}px` }}>
             <div className="relative mb-3 h-4 text-[11px] font-medium tracking-wider text-secondary">
               {monthLabels.map(({ month, weekIndex }) => (
                 <span
