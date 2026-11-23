@@ -129,7 +129,7 @@ export function SiteIntro() {
       shown += (cap - shown) * 0.1; // eased chase, so the digits breathe
       if (cap - shown < 0.4) shown = cap;
 
-      num.textContent = String(Math.floor(shown));
+      num.textContent = String(Math.floor(shown)).padStart(3, "0");
       fill.style.width = `${shown.toFixed(2)}%`;
 
       // done once the real signals are in AND the counter has caught up
@@ -219,7 +219,7 @@ export function SiteIntro() {
         </div>
         <div className="il-counter">
           <span ref={numRef} className="il-num">
-            0
+            000
           </span>
           <span className="il-pct">%</span>
         </div>
