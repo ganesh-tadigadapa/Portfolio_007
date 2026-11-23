@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { GitHubContributions } from "@/components/home/github-contributions";
 import { Hero } from "@/components/home/hero";
+import { PhotoStrip } from "@/components/home/photo-strip";
 import { QuoteCard } from "@/components/home/quote-card";
 import { TechStack } from "@/components/home/tech-stack";
 import { ProjectsGrid } from "@/components/projects/projects-grid";
@@ -29,6 +30,7 @@ export default function HomePage() {
       >
         <GitHubContributions />
       </Suspense>
+      <PhotoStrip />
       <QuoteCard />
     </div>
   );
