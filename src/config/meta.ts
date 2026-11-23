@@ -3,7 +3,7 @@ export const siteConfig = {
   title: "Ganesh Tadigadapa | Full-Stack, Cloud & DevOps Engineer",
   description:
     "Portfolio of Ganesh Tadigadapa. Building full-stack products, cloud infrastructure on AWS, distributed systems in Go, and AI-powered tools.",
-  // TODO: replace with your real domain once deployed
+  // The live address: used for the sitemap, canonical links and share previews.
   url: "https://ganesh-tadigadapa.vercel.app",
   githubUsername: "ganesh-tadigadapa",
   twitterHandle: "",
