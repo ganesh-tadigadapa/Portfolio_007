@@ -29,11 +29,12 @@ const WORD_INTERVAL_MS = 950;
 
 /**
  * Runs before first paint (from <head>):
+ * - a reload on any page other than home goes to the homepage (direct links still work)
  * - turns off the browser's scroll restoration so every load starts at the top
  * - marks <html> with reveal-pending so scroll-reveal targets start hidden
  *   (ScrollReveal takes over and plays them once the intro wipes away).
  */
-export const siteIntroBootScript = `(function(){try{history.scrollRestoration="manual";}catch(e){}window.scrollTo(0,0);var d=document.documentElement;if(!matchMedia("(prefers-reduced-motion: reduce)").matches)d.classList.add("reveal-pending");})()`;
+export const siteIntroBootScript = `(function(){try{var n=performance.getEntriesByType("navigation")[0];if(n&&n.type==="reload"&&location.pathname!=="/"){location.replace("/");return;}}catch(e){}try{history.scrollRestoration="manual";}catch(e){}window.scrollTo(0,0);var d=document.documentElement;if(!matchMedia("(prefers-reduced-motion: reduce)").matches)d.classList.add("reveal-pending");})()`;
 
 export function SiteIntro() {
   const [mounted, setMounted] = useState(true);
