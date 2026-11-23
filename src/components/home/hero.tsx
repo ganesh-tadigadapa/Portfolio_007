@@ -58,7 +58,7 @@ export function Hero() {
 
         <div className="-mt-[calc(var(--grid-cell-size)*2)] flex items-end gap-4">
           <div data-reveal="scale" className="relative z-30 shrink-0 rounded-full bg-background p-1">
-            <ProfileAvatar />
+            <ProfileAvatar className="size-24 sm:size-28" />
           </div>
         </div>
 

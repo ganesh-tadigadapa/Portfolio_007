@@ -8,8 +8,8 @@ export function ProfileAvatar({ className }: { className?: string }) {
       <Image
         src={heroConfig.avatar}
         alt={`${heroConfig.name} profile`}
-        width={192}
-        height={192}
+        width={256}
+        height={256}
         className="size-full rounded-full object-cover"
         priority
       />

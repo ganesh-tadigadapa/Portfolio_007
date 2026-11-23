@@ -4,7 +4,7 @@ export const heroConfig = {
   // No booking page yet, so "Book a call" opens an email instead
   calendarUrl: "mailto:ganeshtadigadapa1@gmail.com?subject=Let's%20talk",
   bio: "CS student at Lovely Professional University building things end to end: backends that do the real work, frontends people enjoy, and the cloud pipelines that ship them.",
-  avatar: "/assets/profile-photo.jpg", // previous (anime): /assets/profile.jpg
+  avatar: "/assets/profile-photo-2.jpg", // previous (anime): /assets/profile.jpg
   timezone: "Asia/Kolkata",
   location: "Hyderabad, India",
 };
