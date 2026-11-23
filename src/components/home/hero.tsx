@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   ArrowRight,
   CalendarBlank,
-  GraduationCap,
   MapPin,
   EnvelopeSimple,
   FileText,
@@ -86,10 +85,6 @@ export function Hero() {
               <span className="inline-flex items-center gap-1">
                 <MapPin className="size-3.5" weight="bold" />
                 {heroConfig.location}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <GraduationCap className="size-3.5" weight="bold" />
-                CS @ Lovely Professional University
               </span>
             </div>
             <div data-reveal className="mt-4 flex flex-wrap items-center gap-2">

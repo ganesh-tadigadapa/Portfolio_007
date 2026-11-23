@@ -189,7 +189,7 @@ function PopupLayer({
           onPointerLeave={(e) => e.pointerType === "mouse" && onLeave()}
           className={cn(
             isPresent ? "pointer-events-auto" : "pointer-events-none",
-            "relative flex w-full max-w-[720px] flex-col overflow-hidden overscroll-none rounded-[26px] border border-foreground/10 bg-card shadow-[0_40px_120px_-30px_rgba(0,0,0,0.8)]",
+            "relative flex w-full max-w-[880px] flex-col overflow-hidden overscroll-none rounded-[26px] border border-foreground/10 bg-card shadow-[0_40px_120px_-30px_rgba(0,0,0,0.8)]",
           )}
           style={{ willChange: "transform, opacity" }}
           initial={{ opacity: 0, scale: 0.94, y: 18 }}
@@ -197,13 +197,13 @@ function PopupLayer({
           exit={{ opacity: 0, scale: 0.97, y: 10, transition: { duration: 0.2, ease: "easeIn" } }}
         >
           <div className="flex min-h-0 flex-1 flex-col">
-            <div className="relative h-[min(40vh,320px)] w-full shrink-0 bg-muted">
+            <div className="relative h-[min(50vh,460px)] w-full shrink-0 bg-muted">
               {project.cover ? (
                 <Image
                   src={project.cover}
                   alt={`${project.title} screenshot`}
                   fill
-                  sizes="720px"
+                  sizes="880px"
                   className="object-cover object-top"
                 />
               ) : (
@@ -223,11 +223,11 @@ function PopupLayer({
                 />
               )}
               <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
+              <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8">
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">
                   {project.tech[0]} &middot; {project.date}
                 </p>
-                <h3 className="mt-1 text-3xl font-bold tracking-tight text-white sm:text-4xl">{project.title}</h3>
+                <h3 className="mt-1 text-3xl font-bold tracking-tight text-white sm:text-[44px] sm:leading-none">{project.title}</h3>
               </div>
               {project.preview && (
                 <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
@@ -241,7 +241,7 @@ function PopupLayer({
             </div>
 
             <motion.div
-              className="px-5 py-4 sm:px-7 sm:py-5"
+              className="px-5 py-4 sm:px-8 sm:py-5"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0, transition: { delay: 0.12, duration: 0.35, ease: EASE_OUT } }}
             >
