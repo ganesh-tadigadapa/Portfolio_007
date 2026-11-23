@@ -189,15 +189,15 @@ function PopupLayer({
           onPointerLeave={(e) => e.pointerType === "mouse" && onLeave()}
           className={cn(
             isPresent ? "pointer-events-auto" : "pointer-events-none",
-            "relative flex max-h-[calc(100dvh-24px)] w-full max-w-[720px] flex-col overflow-hidden rounded-[26px] border border-foreground/10 bg-card shadow-[0_40px_120px_-30px_rgba(0,0,0,0.8)] sm:max-h-[88vh]",
+            "relative flex w-full max-w-[720px] flex-col overflow-hidden overscroll-none rounded-[26px] border border-foreground/10 bg-card shadow-[0_40px_120px_-30px_rgba(0,0,0,0.8)]",
           )}
           style={{ willChange: "transform, opacity" }}
           initial={{ opacity: 0, scale: 0.94, y: 18 }}
           animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.42, ease: EASE_OUT } }}
           exit={{ opacity: 0, scale: 0.97, y: 10, transition: { duration: 0.2, ease: "easeIn" } }}
         >
-          <div data-lenis-prevent className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <div className="relative aspect-[16/9] w-full shrink-0 bg-muted">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="relative h-[min(40vh,320px)] w-full shrink-0 bg-muted">
               {project.cover ? (
                 <Image
                   src={project.cover}
@@ -241,24 +241,24 @@ function PopupLayer({
             </div>
 
             <motion.div
-              className="p-5 sm:p-7"
+              className="px-5 py-4 sm:px-7 sm:py-5"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0, transition: { delay: 0.12, duration: 0.35, ease: EASE_OUT } }}
             >
-              <p className="text-[15px] leading-relaxed text-foreground/85 sm:text-base">{project.description}</p>
+              <p className="line-clamp-3 text-[14.5px] leading-relaxed text-foreground/85">{project.description}</p>
 
-              <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.2em] text-secondary">Built with</p>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.2em] text-secondary">Built with</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 {project.tech.map((tech) => {
                   const icon = getTechIcon(tech);
                   return (
                     <span
                       key={tech}
-                      className="inline-flex items-center gap-2 rounded-lg border border-border bg-background/50 py-1.5 pl-1.5 pr-2.5 text-[12.5px]"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/50 py-1 pl-1 pr-2 text-[12px]"
                     >
                       {icon ? (
-                        <span className={`size-6 rounded-md ${techTileClass}`}>
-                          <TechIcon icon={icon} size={13} className="size-[13px]" />
+                        <span className={`size-5 rounded-md ${techTileClass}`}>
+                          <TechIcon icon={icon} size={12} className="size-3" />
                         </span>
                       ) : null}
                       {tech}
@@ -267,7 +267,7 @@ function PopupLayer({
                 })}
               </div>
 
-              <div className="mt-7 flex flex-wrap gap-2">
+              <div className="mt-5 flex flex-wrap gap-2">
                 {project.website && (
                   <a
                     href={project.website}
