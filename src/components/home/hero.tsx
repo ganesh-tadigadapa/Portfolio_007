@@ -37,13 +37,13 @@ export function Hero() {
       <div className="flex flex-col gap-5">
         <div
           data-reveal="unveil"
-          className="relative h-[calc(var(--grid-cell-size)*4.5)] sm:h-[calc(var(--grid-cell-size)*6)]"
+          className="relative aspect-video"
         >
           <div className="relative size-full overflow-hidden rounded-2xl border border-foreground/10 shadow-[0_8px_30px_-12px_rgb(0_0_0/0.45)]">
-          {/* Banner is 3:1 on desktop (720 x 240), filled edge to edge. Previous banner:
-              /assets/header.jpeg. */}
+          {/* Banner option A: 16:9, the image exactly as it is. Other images kept in
+              public/assets: header.jpeg (Virat), header-wide.jpg (3:1 wide scene). */}
           <Image
-            src="/assets/header-wide.jpg"
+            src="/assets/header-close.jpg"
             alt="Header banner"
             fill
             priority
