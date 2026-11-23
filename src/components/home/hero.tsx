@@ -41,15 +41,15 @@ export function Hero() {
         >
           <div className="relative size-full overflow-hidden rounded-2xl border border-foreground/10 shadow-[0_8px_30px_-12px_rgb(0_0_0/0.45)]">
           {/* Banner box is fixed: the same size as the original Virat banner (do not
-              change its height). Only the image inside is chosen and framed. Other
-              images kept in public/assets: header.jpeg (Virat), header-wide.jpg. */}
+              change its height). Only the image inside is chosen and framed.
+              header-banner.jpg is pre-cropped to exactly 4:1 (head to shins). */}
           <Image
-            src="/assets/header-close.jpg"
+            src="/assets/header-banner.jpg"
             alt="Header banner"
             fill
             priority
             sizes="(max-width: 640px) 100vw, 720px"
-            className="hero-parallax object-cover object-[50%_26%]"
+            className="hero-parallax object-cover"
           />
           <div className="absolute inset-0 bg-black/10" />
           </div>
