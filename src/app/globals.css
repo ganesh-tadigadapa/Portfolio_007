@@ -522,51 +522,97 @@ html.modal-lock body {
   }
 }
 
-/* Page transition (page-transition.tsx): quick and quiet. The old page fades and lifts
-   a touch, the new page fades up into place; pt-back reverses the direction. */
-html.pt-leaving main.page-content {
-  opacity: 0;
-  transform: translate3d(0, -10px, 0);
-  transition:
-    opacity 0.18s ease-in,
-    transform 0.18s ease-in;
+/* Page transitions (page-transition.tsx), one per destination, ~0.6 s each. Only
+   active while html[data-vt] is set, so the theme toggle's sweep is untouched.
+   No filters on full-page snapshots (they are what made earlier versions lag). */
+html[data-vt] .site-header {
+  view-transition-name: site-header;
 }
-html.pt-leaving.pt-back main.page-content {
-  transform: translate3d(0, 10px, 0);
+html[data-vt]::view-transition-group(site-header) {
+  animation: none;
+  z-index: 3;
 }
-html.pt-enter-from main.page-content {
-  opacity: 0;
-  transform: translate3d(0, 14px, 0);
-  transition: none;
+html[data-vt]::view-transition-old(site-header) {
+  display: none;
 }
-html.pt-enter-from.pt-back main.page-content {
-  transform: translate3d(0, -14px, 0);
+html[data-vt]::view-transition-new(site-header) {
+  animation: none;
 }
-html.pt-entering main.page-content {
-  transition:
-    opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+html[data-vt]::view-transition-group(root) {
+  animation-duration: 0.62s;
+  background: var(--background);
 }
-/* Thin progress line across the top while the next page loads. */
-.pt-progress {
-  height: 100%;
-  width: 100%;
-  transform-origin: 0 50%;
-  background: linear-gradient(90deg, transparent, var(--foreground));
-  opacity: 0;
+html[data-vt]::view-transition-image-pair(root) {
+  isolation: auto;
+  perspective: 1800px;
 }
-.pt-progress-run {
-  opacity: 0.7;
-  animation: pt-progress 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+html[data-vt]::view-transition-old(root),
+html[data-vt]::view-transition-new(root) {
+  mask-image: none;
+  animation-duration: 0.62s;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1);
 }
-.pt-progress-done {
-  transform: scaleX(1);
-  opacity: 0;
-  transition: opacity 0.3s ease 0.1s;
+
+/* Circle (Home): the new page opens as a circle from the click point. */
+html[data-vt="circle"]::view-transition-old(root) {
+  z-index: 1;
+  animation-name: vt-recede;
 }
-@keyframes pt-progress {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(0.85); }
+html[data-vt="circle"]::view-transition-new(root) {
+  z-index: 2;
+  animation-name: vt-circle;
+}
+
+/* Door (About): the current page swings open on a left hinge, revealing About behind. */
+html[data-vt="door"]::view-transition-old(root) {
+  z-index: 2;
+  transform-origin: 0% 50%;
+  animation-name: vt-door;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+  backface-visibility: hidden;
+}
+html[data-vt="door"]::view-transition-new(root) {
+  z-index: 1;
+  animation-name: vt-behind;
+}
+
+/* Box (Projects): the new page grows out of a rounded box in the centre. */
+html[data-vt="box"]::view-transition-old(root) {
+  z-index: 1;
+  animation-name: vt-recede;
+}
+html[data-vt="box"]::view-transition-new(root) {
+  z-index: 2;
+  animation-name: vt-box;
+  animation-timing-function: cubic-bezier(0.83, 0, 0.17, 1);
+}
+
+@keyframes vt-recede {
+  to { transform: scale(0.94); opacity: 0.4; }
+}
+@keyframes vt-circle {
+  from { clip-path: circle(0% at var(--vt-x, 50%) var(--vt-y, 0px)); }
+  to { clip-path: circle(150% at var(--vt-x, 50%) var(--vt-y, 0px)); }
+}
+@keyframes vt-door {
+  0% { transform: rotateY(0deg); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: rotateY(-88deg); opacity: 0.2; }
+}
+@keyframes vt-behind {
+  from { transform: scale(0.95); opacity: 0.5; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes vt-box {
+  from {
+    clip-path: inset(32% 30% round 28px);
+    transform: scale(0.96);
+  }
+  to {
+    clip-path: inset(0% 0% round 0px);
+    transform: scale(1);
+  }
 }
 
 /* Sun/moon swap: the new icon spins and grows in. */
