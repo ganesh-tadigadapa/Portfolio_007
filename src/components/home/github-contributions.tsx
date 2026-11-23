@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ContributionSnake } from "@/components/home/contribution-snake";
 import { Container } from "@/components/layout/container";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { siteConfig } from "@/config/meta";
@@ -29,7 +30,9 @@ function getMonthLabels(weeks: ContributionDay[][]) {
     const firstDay = week.find((day) => day.date);
     if (!firstDay) return;
 
-    const month = new Date(firstDay.date).toLocaleString("en", { month: "short" }).toUpperCase();
+    const month = new Date(firstDay.date)
+      .toLocaleString("en", { month: "short" })
+      .toUpperCase();
     if (month === lastMonth) return;
 
     const lastIndex = labels[labels.length - 1]?.weekIndex ?? -4;
@@ -43,7 +46,9 @@ function getMonthLabels(weeks: ContributionDay[][]) {
 }
 
 function getYearRange(contributions: { date: string }[]) {
-  const dates = contributions.filter((d) => d.date).map((d) => new Date(d.date));
+  const dates = contributions
+    .filter((d) => d.date)
+    .map((d) => new Date(d.date));
   if (!dates.length) return "";
 
   const start = dates[0]!.getFullYear();
@@ -63,6 +68,9 @@ export async function GitHubContributions() {
   const total = data.total.lastYear;
   const yearRange = getYearRange(data.contributions);
   const gridWidth = weeks.length * WEEK_STEP;
+  const food = weeks.flatMap((week, x) =>
+    week.flatMap((day, y) => (day.level > 0 ? [{ x, y }] : [])),
+  );
 
   return (
     <Container>
@@ -82,39 +90,56 @@ export async function GitHubContributions() {
               ))}
             </div>
 
-            <div data-reveal-stagger="12" className="flex" style={{ gap: `${GAP}px` }}>
-              {weeks.map((week, weekIndex) => (
-                <div
-                  key={weekIndex}
-                  className="flex flex-col"
-                  style={{ gap: `${GAP}px` }}
-                >
-                  {week.map((day, dayIndex) => (
-                    <div
-                      key={`${weekIndex}-${dayIndex}`}
-                      title={
-                        day.date
-                          ? `${day.count} contributions on ${day.date}`
-                          : undefined
-                      }
-                      className={cn(
-                        "rounded-[3px]",
-                        day.level < 0
-                          ? "bg-transparent"
-                          : levelColors[day.level] ?? levelColors[0],
-                      )}
-                      style={{ width: CELL, height: CELL }}
-                    />
-                  ))}
-                </div>
-              ))}
+            <div className="relative">
+              <div
+                data-reveal-stagger="12"
+                className="flex"
+                style={{ gap: `${GAP}px` }}
+              >
+                {weeks.map((week, weekIndex) => (
+                  <div
+                    key={weekIndex}
+                    className="flex flex-col"
+                    style={{ gap: `${GAP}px` }}
+                  >
+                    {week.map((day, dayIndex) => (
+                      <div
+                        key={`${weekIndex}-${dayIndex}`}
+                        title={
+                          day.date
+                            ? `${day.count} contributions on ${day.date}`
+                            : undefined
+                        }
+                        className={cn(
+                          "rounded-[3px]",
+                          day.level < 0
+                            ? "bg-transparent"
+                            : (levelColors[day.level] ?? levelColors[0]),
+                        )}
+                        style={{ width: CELL, height: CELL }}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <ContributionSnake
+                food={food}
+                columns={weeks.length}
+                cell={CELL}
+                gap={GAP}
+                emptyClass={levelColors[0]!}
+              />
             </div>
           </div>
         </div>
 
-        <div data-reveal className="mt-5 flex flex-wrap items-center justify-between gap-4 text-[11px] font-medium tracking-wider text-secondary">
+        <div
+          data-reveal
+          className="mt-5 flex flex-wrap items-center justify-between gap-4 text-[11px] font-medium tracking-wider text-secondary"
+        >
           <p className="uppercase">
-            <span className="text-foreground">{total}</span> contributions · {yearRange}
+            <span className="text-foreground">{total}</span> contributions ·{" "}
+            {yearRange}
           </p>
           <div className="flex items-center gap-1.5">
             <span className="uppercase">Less</span>
