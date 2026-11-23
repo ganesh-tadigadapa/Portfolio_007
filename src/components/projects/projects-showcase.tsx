@@ -10,7 +10,7 @@ import {
 import { AnimatePresence, motion, type Transition } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { HoverPreview } from "@/components/projects/hover-preview";
 import { TechIcon, techTileClass } from "@/components/shared/tech-icon";
@@ -20,9 +20,9 @@ import { cn } from "@/lib/utils";
 
 /**
  * Projects as App Store–style cards. Each card is a tall cover with the title over it;
- * clicking opens it into a full article: the card, cover and title morph into place
+ * resting the mouse on it (or clicking / tapping) opens it into a full article: the card, cover and title morph into place
  * (shared layoutId), the page dims and blurs behind it, and the details fade in.
- * Close with the ✕, Escape, or a click outside; it morphs back into its card.
+ * Moving the mouse off it, the ✕, Escape or a click outside closes it again.
  *
  * The previous grid (projects-grid.tsx) is kept as a fallback.
  */
@@ -37,8 +37,38 @@ const spring: Transition = {
 export function ProjectsShowcase({ projects }: { projects: Project[] }) {
   const [open, setOpen] = useState<Project | null>(null);
   const [mounted, setMounted] = useState(false);
-  const close = useCallback(() => setOpen(null), []);
   useEffect(() => setMounted(true), []);
+
+  // Hover to open (mouse only): resting on a card for a moment opens it; moving off the
+  // open article closes it. A short cooldown after closing stops the card now under the
+  // pointer from popping straight open. Click / tap / keyboard still work everywhere.
+  const openTimer = useRef<number | undefined>(undefined);
+  const closeTimer = useRef<number | undefined>(undefined);
+  const cooldownUntil = useRef(0);
+
+  const close = useCallback(() => {
+    window.clearTimeout(closeTimer.current);
+    cooldownUntil.current = Date.now() + 700;
+    setOpen(null);
+  }, []);
+  const hoverOpen = useCallback((p: Project) => {
+    window.clearTimeout(openTimer.current);
+    if (Date.now() < cooldownUntil.current) return;
+    openTimer.current = window.setTimeout(() => setOpen(p), 450);
+  }, []);
+  const cancelHoverOpen = useCallback(() => window.clearTimeout(openTimer.current), []);
+  const leaveArticle = useCallback(() => {
+    window.clearTimeout(closeTimer.current);
+    closeTimer.current = window.setTimeout(close, 250);
+  }, [close]);
+  const enterArticle = useCallback(() => window.clearTimeout(closeTimer.current), []);
+  useEffect(
+    () => () => {
+      window.clearTimeout(openTimer.current);
+      window.clearTimeout(closeTimer.current);
+    },
+    [],
+  );
 
   // While an article is open: lock page scroll (SmoothScroll pauses too) and listen for Escape.
   useEffect(() => {
@@ -59,7 +89,15 @@ export function ProjectsShowcase({ projects }: { projects: Project[] }) {
         {projects.map((p) => (
           <li key={p.slug} className="relative h-[400px] sm:h-[420px]">
             {open?.slug === p.slug ? null : (
-              <CollapsedCard project={p} onOpen={() => setOpen(p)} />
+              <CollapsedCard
+                project={p}
+                onOpen={() => {
+                  cancelHoverOpen();
+                  setOpen(p);
+                }}
+                onHoverStart={() => hoverOpen(p)}
+                onHoverEnd={cancelHoverOpen}
+              />
             )}
           </li>
         ))}
@@ -87,7 +125,13 @@ export function ProjectsShowcase({ projects }: { projects: Project[] }) {
 
             <AnimatePresence>
               {open && (
-                <ExpandedCard key={open.slug} project={open} onClose={close} />
+                <ExpandedCard
+                  key={open.slug}
+                  project={open}
+                  onClose={close}
+                  onPointerLeave={leaveArticle}
+                  onPointerEnter={enterArticle}
+                />
               )}
             </AnimatePresence>
           </>,
@@ -119,9 +163,13 @@ function CardEyebrow({
 function CollapsedCard({
   project,
   onOpen,
+  onHoverStart,
+  onHoverEnd,
 }: {
   project: Project;
   onOpen: () => void;
+  onHoverStart: () => void;
+  onHoverEnd: () => void;
 }) {
   return (
     <motion.button
@@ -129,6 +177,8 @@ function CollapsedCard({
       layoutId={`card-${project.slug}`}
       transition={spring}
       onClick={onOpen}
+      onPointerEnter={(e) => e.pointerType === "mouse" && onHoverStart()}
+      onPointerLeave={onHoverEnd}
       aria-label={`Open ${project.title}`}
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.975 }}
@@ -186,9 +236,13 @@ function CollapsedCard({
 function ExpandedCard({
   project,
   onClose,
+  onPointerEnter,
+  onPointerLeave,
 }: {
   project: Project;
   onClose: () => void;
+  onPointerEnter: () => void;
+  onPointerLeave: () => void;
 }) {
   return (
     <div
@@ -201,6 +255,8 @@ function ExpandedCard({
         role="dialog"
         aria-modal="true"
         aria-label={project.title}
+        onPointerEnter={(e) => e.pointerType === "mouse" && onPointerEnter()}
+        onPointerLeave={(e) => e.pointerType === "mouse" && onPointerLeave()}
         className="pointer-events-auto relative flex max-h-[calc(100dvh-24px)] w-full max-w-[720px] flex-col overflow-hidden border border-foreground/10 bg-card shadow-[0_40px_120px_-30px_rgba(0,0,0,0.8)] sm:max-h-[88vh]"
         style={{ borderRadius: 26 }}
       >

@@ -13,7 +13,7 @@ import { getTechIcon } from "@/lib/tech-icons";
  * Which look the projects section uses. "showcase" = App Store–style cards that open
  * into an article (projects-showcase.tsx); "classic" = the original glass cards below.
  */
-const LAYOUT: "showcase" | "classic" = "classic";
+const LAYOUT: "showcase" | "classic" = "showcase";
 
 export function ProjectCard({ project, index = 0 }: { project: Project; index?: number }) {
   const detailHref = `/projects/${project.slug}`;
