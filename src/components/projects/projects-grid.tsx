@@ -4,9 +4,16 @@ import { Container } from "@/components/layout/container";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass";
 import { ProjectCover } from "@/components/projects/project-cover";
+import { ProjectsShowcase } from "@/components/projects/projects-showcase";
 import { TechIcon, techTileClass } from "@/components/shared/tech-icon";
 import { projects, type Project } from "@/config/projects";
 import { getTechIcon } from "@/lib/tech-icons";
+
+/**
+ * Which look the projects section uses. "showcase" = App Store–style cards that open
+ * into an article (projects-showcase.tsx); "classic" = the original glass cards below.
+ */
+const LAYOUT: "showcase" | "classic" = "showcase";
 
 export function ProjectCard({ project, index = 0 }: { project: Project; index?: number }) {
   const detailHref = `/projects/${project.slug}`;
@@ -123,11 +130,15 @@ export function ProjectsGrid({
         <SectionHeading eyebrow="Selected work" title="Featured projects" />
       )}
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        {displayed.map((project, index) => (
-          <ProjectCard key={project.slug} project={project} index={index} />
-        ))}
-      </div>
+      {LAYOUT === "showcase" ? (
+        <ProjectsShowcase projects={displayed} />
+      ) : (
+        <div className="grid gap-5 sm:grid-cols-2">
+          {displayed.map((project, index) => (
+            <ProjectCard key={project.slug} project={project} index={index} />
+          ))}
+        </div>
+      )}
 
       {showViewAll && (
         <div className="mt-10 flex justify-center">

@@ -238,7 +238,9 @@ html.reveal-pending main [data-reveal-stagger] > * {
 }
 
 html.intro-lock,
-html.intro-lock body {
+html.intro-lock body,
+html.modal-lock,
+html.modal-lock body {
   overflow: hidden !important;
 }
 

@@ -37,6 +37,9 @@ export function SmoothScroll() {
 
     // Follow the intro's scroll lock.
     const html = document.documentElement;
+    // (Dialogs don't stop Lenis: a stopped Lenis swallows every wheel event, including
+    // inside the dialog. Dialogs mark themselves data-lenis-prevent instead, and
+    // html.modal-lock's overflow: hidden keeps the page still.)
     const sync = () => (html.classList.contains("intro-lock") ? lenis.stop() : lenis.start());
     sync();
     const observer = new MutationObserver(sync);
