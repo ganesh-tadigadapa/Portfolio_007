@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Full-screen intro shown on the first page load of a browser tab.
+ * Full-screen intro shown on every full page load (including reloads).
+ * Moving between pages inside the site does not replay it.
  *
  * A Japanese word rotates above a large 0–100% counter. The counter follows
  * real load signals (fonts, then the window load event), never Math.random.
@@ -26,16 +27,12 @@ const LABEL = "Loading Experience";
 const MIN_DURATION_MS = 1600;
 const WORD_INTERVAL_MS = 950;
 
-const SEEN_KEY = "site-intro-seen";
-
 /**
  * Runs before first paint (from <head>):
  * - marks <html> with reveal-pending so scroll-reveal targets start hidden
- *   (ScrollReveal takes over and plays them once the intro wipes away);
- * - if this tab has already seen the intro, marks <html> so CSS hides the
- *   overlay without a flash.
+ *   (ScrollReveal takes over and plays them once the intro wipes away).
  */
-export const siteIntroBootScript = `(function(){var d=document.documentElement;if(!matchMedia("(prefers-reduced-motion: reduce)").matches)d.classList.add("reveal-pending");try{if(sessionStorage.getItem("${SEEN_KEY}"))d.setAttribute("data-intro-seen","")}catch(e){}})()`;
+export const siteIntroBootScript = `(function(){var d=document.documentElement;if(!matchMedia("(prefers-reduced-motion: reduce)").matches)d.classList.add("reveal-pending");})()`;
 
 export function SiteIntro() {
   const [mounted, setMounted] = useState(true);
@@ -48,10 +45,6 @@ export function SiteIntro() {
 
   useEffect(() => {
     const html = document.documentElement;
-    if (html.hasAttribute("data-intro-seen")) {
-      setMounted(false);
-      return;
-    }
 
     const root = rootRef.current!;
     const kanji = kanjiRef.current!;
@@ -150,9 +143,6 @@ export function SiteIntro() {
       cancelAnimationFrame(raf);
       clearInterval(wordTimer);
       window.removeEventListener("keydown", onKey);
-      try {
-        sessionStorage.setItem(SEEN_KEY, "1");
-      } catch {}
 
       num.textContent = "100";
       fill.style.width = "100%";

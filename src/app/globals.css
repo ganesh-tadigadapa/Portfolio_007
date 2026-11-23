@@ -276,10 +276,6 @@ main [data-scroll-section] {
    (src/components/effects/site-intro.tsx)
    ============================================================ */
 
-html[data-intro-seen] .site-intro {
-  display: none;
-}
-
 /* Scroll-reveal targets start hidden before first paint; ScrollReveal swaps
    this for WAAPI holds on hydration. The delayed animation is a failsafe in
    case the script never runs. */

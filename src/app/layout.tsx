@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Hide the intro before first paint if this tab has already seen it */}
+        {/* Before first paint: hold scroll-reveal targets hidden until the intro finishes */}
         <script dangerouslySetInnerHTML={{ __html: siteIntroBootScript }} />
         <noscript>
           <style>{`.site-intro{display:none!important}`}</style>

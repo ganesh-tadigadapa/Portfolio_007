@@ -77,7 +77,6 @@ function stepOf(el: Element): number {
 function introIsDone() {
   const html = document.documentElement;
   return (
-    html.hasAttribute("data-intro-seen") ||
     html.hasAttribute("data-intro-done") ||
     !document.querySelector(".site-intro")
   );
