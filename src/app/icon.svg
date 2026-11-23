@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -50 100 100">
+  <!-- Yin-yang: dark half on the right, light half on the left, with the two dots. -->
+  <circle r="48" fill="#ffffff"/>
+  <path d="M0,-48 A48,48 0 0 1 0,48 A24,24 0 0 1 0,0 A24,24 0 0 0 0,-48 Z" fill="#0a0a0a"/>
+  <circle cy="-24" r="6.5" fill="#0a0a0a"/>
+  <circle cy="24" r="6.5" fill="#ffffff"/>
+  <circle r="48" fill="none" stroke="#0a0a0a" stroke-width="2.5"/>
+</svg>
