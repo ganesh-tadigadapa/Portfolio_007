@@ -10,6 +10,7 @@ import { siteConfig } from "@/config/meta";
 import { PersonJsonLd } from "@/components/shared/person-json-ld";
 import { ScrollReveal } from "@/components/effects/scroll-reveal";
 import { SmoothScroll } from "@/components/effects/smooth-scroll";
+import { BuildIntro } from "@/components/effects/build-intro";
 import { PageTransitionListener } from "@/components/layout/page-transition";
 import { SiteIntro, siteIntroBootScript } from "@/components/effects/site-intro";
 import "./globals.css";
@@ -39,7 +40,7 @@ export default function RootLayout({
         {/* Before first paint: hold scroll-reveal targets hidden until the intro finishes */}
         <script dangerouslySetInnerHTML={{ __html: siteIntroBootScript }} />
         <noscript>
-          <style>{`.site-intro{display:none!important}`}</style>
+          <style>{`.site-intro,[data-build-intro]{display:none!important}`}</style>
         </noscript>
       </head>
       <body
@@ -50,6 +51,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
           <TooltipProvider>
             <SiteIntro />
+            <BuildIntro />
             <SmoothScroll />
             <PageTransitionListener />
             <div className="relative flex min-h-screen flex-col bg-grid">

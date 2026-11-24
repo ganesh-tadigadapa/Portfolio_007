@@ -166,10 +166,16 @@ export function SiteIntro() {
           // Every visit opens on the top of the homepage, never a remembered position.
           window.scrollTo({ top: 0, left: 0, behavior: "instant" });
           root.classList.add("il-out");
-          html.classList.remove("intro-lock");
-          // Hand over to the page: ScrollReveal starts building the hero now.
-          html.setAttribute("data-intro-done", "");
-          document.dispatchEvent(new Event("site-intro:done"));
+          if (document.querySelector("[data-build-intro]")) {
+            // Homepage: the assembly intro (build-intro.tsx) is waiting underneath; it
+            // plays as this wipes away, then hands over to the page itself.
+            document.dispatchEvent(new Event("site-intro:build"));
+          } else {
+            html.classList.remove("intro-lock");
+            // Hand over to the page: ScrollReveal starts building the hero now.
+            html.setAttribute("data-intro-done", "");
+            document.dispatchEvent(new Event("site-intro:done"));
+          }
           later(() => setMounted(false), 1400); // stop it eating pointer events
         },
         reduced ? 120 : 700,

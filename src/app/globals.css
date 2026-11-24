@@ -531,6 +531,20 @@ html.modal-lock body {
     0 0 40px rgb(0 0 0 / 0.35);
 }
 
+/* Assembly intro blocks (build-intro.tsx): soft skeleton pieces in the theme's ink. */
+.build-block {
+  background: color-mix(in oklch, var(--foreground) 7%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--foreground) 9%, transparent);
+}
+.build-shimmer {
+  background: linear-gradient(
+    100deg,
+    transparent,
+    color-mix(in oklch, var(--foreground) 9%, transparent) 50%,
+    transparent
+  );
+}
+
 /* Sun/moon swap: the new icon spins and grows in. */
 @keyframes theme-icon-in {
   from { transform: rotate(-120deg) scale(0.3); opacity: 0; }
