@@ -168,6 +168,17 @@ export function ScrollReveal() {
     };
 
     register();
+    // The homepage build intro (build-intro.tsx) is itself the entrance for everything
+    // on the first screen: show those elements in their final state, unanimated.
+    const skipAboveFold = () => {
+      holds.forEach((hold, el) => {
+        if (watchTargetOf(el).getBoundingClientRect().top < window.innerHeight) {
+          hold.cancel();
+          holds.delete(el);
+        }
+      });
+    };
+    document.addEventListener("intro:reveal-above-fold", skipAboveFold);
     // The WAAPI holds now hide everything; the CSS pre-paint hide can go.
     html.classList.remove("reveal-pending");
 
@@ -198,6 +209,7 @@ export function ScrollReveal() {
     return () => {
       clearTimeout(failsafe);
       document.removeEventListener("site-intro:done", onIntroDone);
+      document.removeEventListener("intro:reveal-above-fold", skipAboveFold);
       observer?.disconnect();
       mutations.disconnect();
       holds.forEach((animation) => animation.cancel());

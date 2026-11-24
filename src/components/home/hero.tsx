@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { DecodeText } from "@/components/effects/decode-text";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -64,7 +65,7 @@ export function Hero() {
 
         <div className="min-w-0">
             <h1 data-reveal="blur" className="flex items-center gap-2 text-3xl font-bold tracking-tight sm:text-4xl">
-              {heroConfig.name}
+              <DecodeText text={heroConfig.name} />
               <SealCheck
                 className="size-6 shrink-0 text-[#1D9BF0] sm:size-7"
                 weight="fill"

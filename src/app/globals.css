@@ -531,18 +531,67 @@ html.modal-lock body {
     0 0 40px rgb(0 0 0 / 0.35);
 }
 
-/* Compile intro (build-intro.tsx): the page renders from its own JSX. */
-.compile-ground { fill: var(--background); }
-.compile-code { color: color-mix(in oklch, var(--foreground) 70%, transparent); }
-.compile-tag { color: color-mix(in oklch, var(--foreground) 92%, transparent); }
-.compile-attr { color: color-mix(in oklch, var(--foreground) 55%, transparent); }
-.compile-str { color: #34d399; }
-.compile-expr { color: #a78bfa; }
-.compile-text { color: color-mix(in oklch, var(--foreground) 75%, transparent); }
-.compile-status { color: color-mix(in oklch, var(--foreground) 50%, transparent); }
-.compile-accent { color: #34d399; }
-:root:not(.dark) .compile-str, :root:not(.dark) .compile-accent { color: #059669; }
-:root:not(.dark) .compile-expr { color: #7c3aed; }
+/* Name decode (decode-text.tsx): glyph cycles over a hidden real letter, which then
+   settles in with a short blur-to-sharp lift. */
+.decode-slot { position: relative; display: inline-block; }
+.decode-real { display: inline-block; }
+.decode-hidden { opacity: 0; }
+.decode-in { animation: decode-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.decode-glyph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.82em;
+  color: color-mix(in oklch, var(--foreground) 38%, transparent);
+}
+@keyframes decode-in {
+  from { opacity: 0; filter: blur(6px); transform: translateY(0.18em); }
+  to { opacity: 1; filter: blur(0); transform: none; }
+}
+
+/* Project cards (spotlight-card.tsx): a soft light that follows the cursor, and a
+   brighter border near it. */
+.spotlight-card {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight-card::before,
+.spotlight-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.spotlight-card::before {
+  z-index: -1;
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 0%),
+    color-mix(in oklch, var(--foreground) 7%, transparent),
+    transparent 60%
+  );
+}
+.spotlight-card::after {
+  padding: 1px;
+  background: radial-gradient(
+    260px circle at var(--mx, 50%) var(--my, 0%),
+    color-mix(in oklch, var(--foreground) 45%, transparent),
+    transparent 65%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.spotlight-card:hover::before,
+.spotlight-card:hover::after {
+  opacity: 1;
+}
 
 /* Sun/moon swap: the new icon spins and grows in. */
 @keyframes theme-icon-in {
@@ -554,10 +603,37 @@ html.modal-lock body {
 @media (prefers-reduced-motion: reduce) { .theme-icon-in { animation: none; } }
 
 /* Photo marquee: the track holds the list twice; photo-strip.tsx moves it frame by
-   frame (base drift, scroll push, eased hover stop). With reduced motion it becomes a
-   plain swipeable row. */
-.marquee-track {
+   frame (drift, scroll push, eased hover stop, spotlight, parallax, lean). With reduced
+   motion it becomes a plain swipeable row. */
+.marquee {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 90%, transparent);
+}
+.marquee-track,
+.marquee-item,
+.marquee-img {
   will-change: transform;
+}
+.marquee-item {
+  transform-origin: 50% 50%;
+}
+.marquee {
+  cursor: grab;
+  touch-action: pan-y; /* vertical page scroll stays native; sideways drags move the strip */
+  user-select: none;
+}
+.marquee.is-dragging {
+  cursor: grabbing;
+}
+/* Hovered photo lifts a little and straightens (the strip eases to a stop meanwhile). */
+.marquee-frame {
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.5s ease;
+}
+.marquee-item:hover .marquee-frame {
+  transform: translateY(-6px) scale(1.04);
+  box-shadow: 0 18px 36px -18px rgb(0 0 0 / 0.7);
 }
 @media (prefers-reduced-motion: reduce) {
   .marquee { overflow-x: auto; scrollbar-width: none; }

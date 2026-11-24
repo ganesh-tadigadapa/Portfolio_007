@@ -12,11 +12,14 @@ export type Project = {
   /** Animated recording of the live site, played over the cover on hover */
   preview?: string;
   gradient: string;
+  /** Short domain tag shown on the card. */
+  category?: string;
 };
 
 export const projects: Project[] = [
   {
     slug: "zenkai",
+    category: "Full-stack · Aggregator",
     title: "Zenkai",
     date: "09.2026",
     description:
@@ -31,6 +34,7 @@ export const projects: Project[] = [
   },
   {
     slug: "retinax",
+    category: "AI · Healthcare",
     title: "RetinaX",
     date: "09.2026",
     description:
@@ -45,6 +49,7 @@ export const projects: Project[] = [
   },
   {
     slug: "splitly",
+    category: "AI · Fintech",
     title: "Splitly",
     date: "05.2026",
     description:
@@ -58,6 +63,7 @@ export const projects: Project[] = [
   },
   {
     slug: "zekrom",
+    category: "Tools · File conversion",
     title: "Zekrom",
     date: "11.2026",
     description:
@@ -71,6 +77,7 @@ export const projects: Project[] = [
   },
   {
     slug: "vautify",
+    category: "Distributed systems",
     title: "Vautify",
     date: "09.2026",
     description:
@@ -85,6 +92,7 @@ export const projects: Project[] = [
   },
   {
     slug: "lpu-nexus",
+    category: "Campus · Web",
     title: "LPU Nexus",
     date: "11.2024",
     description:
@@ -99,6 +107,7 @@ export const projects: Project[] = [
   },
   {
     slug: "thread-visualize",
+    category: "OS · Simulation",
     title: "Thread Visualize",
     date: "12.2025",
     description:

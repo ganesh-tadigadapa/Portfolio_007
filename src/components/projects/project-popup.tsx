@@ -36,15 +36,27 @@ const OPEN_DELAY = 200; // ms resting on a card before it opens
 const CLOSE_DELAY = 200; // ms off the popup before it closes
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
+/** Where the hovered card sits on screen, so the popup can grow out of it. */
+type Origin = { x: number; y: number; scale: number };
 type Ctx = {
-  hoverStart: (p: Project) => void;
+  hoverStart: (p: Project, el: HTMLElement) => void;
   hoverEnd: () => void;
-  openNow: (p: Project) => void;
+  openNow: (p: Project, el: HTMLElement) => void;
 };
+
+function originOf(el: HTMLElement): Origin {
+  const r = el.getBoundingClientRect();
+  return {
+    x: r.left + r.width / 2 - window.innerWidth / 2,
+    y: r.top + r.height / 2 - window.innerHeight / 2,
+    scale: Math.min(0.9, Math.max(0.35, r.width / Math.min(880, window.innerWidth - 24))),
+  };
+}
 const PopupContext = createContext<Ctx | null>(null);
 
 export function ProjectPopupRoot({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState<Project | null>(null);
+  const origin = useRef<Origin>({ x: 0, y: 0, scale: 0.9 });
   const [mounted, setMounted] = useState(false);
   const openTimer = useRef<number | undefined>(undefined);
   const closeTimer = useRef<number | undefined>(undefined);
@@ -78,7 +90,7 @@ export function ProjectPopupRoot({ children }: { children: ReactNode }) {
 
   const ctx = useMemo<Ctx>(
     () => ({
-      hoverStart: (p) => {
+      hoverStart: (p, el) => {
         // Ignore while (or just after) the page is scrolling, and don't restart a
         // timer that is already counting down for this card.
         if (Date.now() - scrolledAt.current < 250) return;
@@ -89,6 +101,7 @@ export function ProjectPopupRoot({ children }: { children: ReactNode }) {
         const settle = Math.max(0, 180 - (Date.now() - closedAt.current));
         openTimer.current = window.setTimeout(() => {
           pending.current = null;
+          origin.current = originOf(el);
           setOpen(p);
         }, OPEN_DELAY + settle);
       },
@@ -96,8 +109,9 @@ export function ProjectPopupRoot({ children }: { children: ReactNode }) {
         window.clearTimeout(openTimer.current);
         pending.current = null;
       },
-      openNow: (p) => {
+      openNow: (p, el) => {
         window.clearTimeout(openTimer.current);
+        origin.current = originOf(el);
         setOpen(p);
       },
     }),
@@ -135,6 +149,7 @@ export function ProjectPopupRoot({ children }: { children: ReactNode }) {
               <PopupLayer
                 key={open.slug}
                 project={open}
+                origin={origin.current}
                 onClose={close}
                 onEnter={() => window.clearTimeout(closeTimer.current)}
                 onLeave={() => {
@@ -172,13 +187,13 @@ export function PopupTrigger({
       // still cursor fires enter events but no movement).
       onPointerMove={(e) => {
         if (e.pointerType !== "mouse" || (e.movementX === 0 && e.movementY === 0)) return;
-        ctx.hoverStart(project);
+        ctx.hoverStart(project, e.currentTarget);
       }}
       onPointerLeave={ctx.hoverEnd}
       onClick={(e) => {
         if (!clickToOpen) return;
         if ((e.target as HTMLElement).closest("a, button:not([data-popup-open])")) return;
-        ctx.openNow(project);
+        ctx.openNow(project, e.currentTarget);
       }}
     >
       {children}
@@ -188,11 +203,13 @@ export function PopupTrigger({
 
 function PopupLayer({
   project,
+  origin,
   onClose,
   onEnter,
   onLeave,
 }: {
   project: Project;
+  origin: Origin;
   onClose: () => void;
   onEnter: () => void;
   onLeave: () => void;
@@ -200,6 +217,14 @@ function PopupLayer({
   // While fading out, let the pointer straight through to the cards underneath.
   const isPresent = useIsPresent();
   const passThrough = !isPresent && "pointer-events-none";
+  // While it flies out of the card, it slides away from under a still cursor; that must
+  // not count as the mouse leaving. Only real movement after it has settled does.
+  const settled = useRef(false);
+  const leaveIfMoved = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse" || !settled.current) return;
+    if (e.movementX === 0 && e.movementY === 0) return;
+    onLeave();
+  };
 
   return (
     <>
@@ -210,6 +235,7 @@ function PopupLayer({
         animate={{ opacity: 1, transition: { duration: 0.22, ease: "easeOut" } }}
         exit={{ opacity: 0, transition: { duration: 0.16, ease: "easeIn" } }}
         onClick={onClose}
+        onPointerMove={leaveIfMoved}
       />
       <div
         data-lenis-prevent
@@ -220,15 +246,30 @@ function PopupLayer({
           aria-modal="true"
           aria-label={project.title}
           onPointerEnter={(e) => e.pointerType === "mouse" && onEnter()}
-          onPointerLeave={(e) => e.pointerType === "mouse" && onLeave()}
+          onPointerLeave={(e) => e.pointerType === "mouse" && settled.current && onLeave()}
+          onAnimationComplete={() => {
+            settled.current = true;
+          }}
           className={cn(
             isPresent ? "pointer-events-auto" : "pointer-events-none",
             "relative flex w-full max-w-[880px] flex-col overflow-hidden overscroll-none rounded-[26px] border border-foreground/10 bg-card shadow-[0_40px_120px_-30px_rgba(0,0,0,0.8)]",
           )}
           style={{ willChange: "transform, opacity" }}
-          initial={{ opacity: 0, scale: 0.94, y: 18 }}
-          animate={{ opacity: 1, scale: 1, y: 0, transition: { duration: 0.32, ease: EASE_OUT } }}
-          exit={{ opacity: 0, scale: 0.97, y: 10, transition: { duration: 0.16, ease: "easeIn" } }}
+          initial={{ opacity: 0, x: origin.x, y: origin.y, scale: origin.scale }}
+          animate={{
+            opacity: 1,
+            x: 0,
+            y: 0,
+            scale: 1,
+            transition: { duration: 0.42, ease: EASE_OUT, opacity: { duration: 0.2 } },
+          }}
+          exit={{
+            opacity: 0,
+            x: origin.x,
+            y: origin.y,
+            scale: origin.scale,
+            transition: { duration: 0.28, ease: [0.4, 0, 0.6, 1], opacity: { duration: 0.22, delay: 0.06 } },
+          }}
         >
           <div className="flex min-h-0 flex-1 flex-col">
             <div className="relative h-[min(50vh,460px)] w-full shrink-0 bg-muted">
@@ -245,7 +286,6 @@ function PopupLayer({
               )}
               {project.preview && (
                 // The live recording, playing as soon as it has loaded.
-                // eslint-disable-next-line @next/next/no-img-element
                 <motion.img
                   src={project.preview}
                   alt=""

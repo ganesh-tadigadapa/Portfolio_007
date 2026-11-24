@@ -19,7 +19,7 @@ export default function HomePage() {
     <div className="space-y-12 pb-24 sm:space-y-16 sm:pb-20">
       <Hero />
       <TechStack />
-      <ProjectsGrid limit={2} showViewAll />
+      <ProjectsGrid limit={4} showViewAll />
       <Suspense
         fallback={
           <div

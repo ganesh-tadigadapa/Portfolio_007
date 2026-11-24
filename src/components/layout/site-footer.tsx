@@ -1,4 +1,4 @@
-import { EnvelopeSimple, GithubLogo, LinkedinLogo, MapPin, Phone } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, EnvelopeSimple, GithubLogo, LinkedinLogo, MapPin, Phone } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "@/components/layout/container";
 import { BackToTop, CopyButton, LocalTime } from "@/components/layout/footer-bits";
 import { TransitionLink } from "@/components/layout/page-transition";
@@ -15,7 +15,7 @@ const profiles = [
 ];
 
 const heading = "font-mono text-[10.5px] uppercase tracking-[0.2em] text-secondary";
-const link = "text-foreground/80 transition-colors hover:text-foreground";
+const link = "group text-foreground/80 transition-colors hover:text-foreground";
 
 /**
  * Site footer: identity + availability on the left; navigate / profiles / contact
@@ -24,12 +24,16 @@ const link = "text-foreground/80 transition-colors hover:text-foreground";
  */
 export function SiteFooter() {
   return (
-    <footer className="mt-8 border-t border-border/60 pb-24 sm:pb-0">
+    <footer className="relative mt-8 pb-24 sm:pb-0">
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/25 to-transparent" />
       <Container className="pt-12 sm:pt-14">
         {/* Identity */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-md">
-            <p className="text-lg font-semibold tracking-tight">{siteConfig.name}</p>
+            <p className="flex items-center gap-2.5 text-lg font-semibold tracking-tight">
+              <YinYang />
+              {siteConfig.name}
+            </p>
             <p className="mt-0.5 text-sm text-secondary">Full-Stack &amp; Cloud Engineer</p>
             <p className="mt-3 text-[13.5px] leading-relaxed text-secondary">
               B.Tech CSE at Lovely Professional University. Building full-stack products and the cloud
@@ -52,7 +56,8 @@ export function SiteFooter() {
             <ul className="mt-3 space-y-2 text-sm">
               {headerNav.map((item) => (
                 <li key={item.href}>
-                  <TransitionLink href={item.href} className={link}>
+                  <TransitionLink href={item.href} className={`${link} inline-flex items-center gap-2`}>
+                    <span className="h-px w-2.5 bg-current opacity-40 transition-all duration-300 group-hover:w-4 group-hover:opacity-100" />
                     {item.label}
                   </TransitionLink>
                 </li>
@@ -67,8 +72,9 @@ export function SiteFooter() {
               {profiles.map(({ name, href, icon: Icon }) => (
                 <li key={name}>
                   <a href={href} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-2 ${link}`}>
-                    <Icon className="size-4 text-secondary" />
+                    <Icon className="size-4 text-secondary transition-colors group-hover:text-foreground" />
                     {name}
+                    <ArrowUpRight className="size-3 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
                   </a>
                 </li>
               ))}
@@ -112,5 +118,18 @@ export function SiteFooter() {
         </div>
       </Container>
     </footer>
+  );
+}
+
+/** The site's yin-yang mark, matching the favicon. */
+function YinYang() {
+  return (
+    <svg viewBox="-50 -50 100 100" className="size-[18px] shrink-0" aria-hidden>
+      <circle r="48" fill="#fff" />
+      <path d="M0,-48 A48,48 0 0 1 0,48 A24,24 0 0 1 0,0 A24,24 0 0 0 0,-48 Z" fill="#0a0a0a" />
+      <circle cy="-24" r="6.5" fill="#0a0a0a" />
+      <circle cy="24" r="6.5" fill="#fff" />
+      <circle r="48" fill="none" stroke="currentColor" strokeOpacity="0.45" strokeWidth="3" />
+    </svg>
   );
 }
