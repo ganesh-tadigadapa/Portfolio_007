@@ -531,18 +531,17 @@ html.modal-lock body {
     0 0 40px rgb(0 0 0 / 0.35);
 }
 
-/* Assembly intro blocks (build-intro.tsx): soft skeleton pieces in the theme's ink. */
-.build-block {
-  background: color-mix(in oklch, var(--foreground) 7%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--foreground) 9%, transparent);
-}
-.build-shimmer {
-  background: linear-gradient(
-    100deg,
-    transparent,
-    color-mix(in oklch, var(--foreground) 9%, transparent) 50%,
-    transparent
-  );
+/* Blueprint construction intro (build-intro.tsx). */
+.bp-stroke { stroke: color-mix(in oklch, var(--foreground) 55%, transparent); }
+.bp-hatch-line { stroke: color-mix(in oklch, var(--foreground) 22%, transparent); }
+.bp-guide-v { width: 1px; background: repeating-linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 22%, transparent) 0 4px, transparent 4px 9px); }
+.bp-guide-h { height: 1px; background: repeating-linear-gradient(to right, color-mix(in oklch, var(--foreground) 22%, transparent) 0 4px, transparent 4px 9px); }
+.bp-label { color: color-mix(in oklch, var(--foreground) 45%, transparent); }
+.bp-tag {
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--foreground);
+  color: var(--background);
 }
 
 /* Sun/moon swap: the new icon spins and grows in. */

@@ -1,46 +1,100 @@
 "use client";
 
-import { motion, type Transition } from "motion/react";
+import { motion } from "motion/react";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 /**
- * "Assembly" intro that plays after the 0–100% loader, on the homepage only.
+ * Blueprint "construction" intro, played after the 0–100% loader, on the homepage only.
  *
- * It waits underneath the loader. When the loader wipes away it fires
- * "site-intro:build"; then the homepage builds itself out of soft blocks that rise and
- * settle one after another (header, banner, avatar, name, buttons, text, toolbox), a
- * shimmer sweeps across the finished structure, and the blocks dissolve into the real
- * page sitting in exactly the same places. Only then does it hand over to the page
- * (data-intro-done + "site-intro:done", which starts the page's own reveals).
- *
- * Blocks animate transform/opacity only, so it stays smooth. Skipped (instant handover)
- * on other pages and with reduced motion; site-intro.tsx checks for [data-build-intro].
+ * It waits underneath the loader. On "site-intro:build" it measures the real homepage
+ * elements (already laid out beneath it) and draws the build over them:
+ *   1. blueprint guides draw across the screen, with corner build labels
+ *   2. every element's outline draws itself in place — image slots get an X, text slots
+ *      get hatching, key pieces get a small tag (BANNER, AVATAR, H1, CTA…)
+ *   3. the blueprint background fades and the real content fills into its outlines
+ *      (the page's own reveals start underneath), then the wireframe fades away
+ * Skipped (instant handover) elsewhere and with reduced motion; site-intro.tsx checks
+ * for [data-build-intro] to decide.
  */
 
-const RISE: Transition = { type: "spring", stiffness: 210, damping: 24, mass: 0.9 };
-const STEP = 0.07; // seconds between blocks
-const TECH_TILES = 19;
+type Kind = "image" | "circle" | "text" | "ui";
+type Piece = { x: number; y: number; w: number; h: number; r: number; kind: Kind; tag?: string };
+
+const TARGETS: [selector: string, kind: Kind, tag?: string, all?: boolean][] = [
+  ['header a[href="/"]', "ui", "LOGO"],
+  ["header nav a", "ui", undefined, true],
+  ['header button[aria-label="Open command palette"]', "ui", "SEARCH"],
+  ["header button[aria-pressed], header button[aria-label='Toggle theme']", "ui", undefined, true],
+  ['main [data-reveal="unveil"]', "image", "BANNER"],
+  ['main [data-reveal="scale"]', "circle", "AVATAR"],
+  ["main h1", "text", "H1"],
+  ["main h1 + div", "text"],
+  ["main h1 ~ div[data-reveal] > *", "ui", undefined, true],
+  ["main p.max-w-xl", "text", "BIO"],
+  ['main [data-reveal-stagger="70"] > *', "ui", undefined, true],
+  ['main [data-reveal-stagger="35"] > *', "ui", undefined, true],
+];
+
+function measure(): Piece[] {
+  const out: Piece[] = [];
+  const vh = window.innerHeight;
+  let ctaTagged = false;
+  let stackTagged = false;
+  for (const [sel, kind, tag, all] of TARGETS) {
+    const els = all ? Array.from(document.querySelectorAll(sel)) : [document.querySelector(sel)];
+    els.forEach((el, i) => {
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      if (r.width < 4 || r.height < 4 || r.top > vh - 8 || r.bottom < 0) return;
+      const radius =
+        kind === "circle"
+          ? r.width / 2
+          : Math.min(parseFloat(getComputedStyle(el).borderRadius) || 6, r.height / 2);
+      let t = i === 0 ? tag : undefined;
+      if (!t && !ctaTagged && sel.includes("h1 ~") && el.tagName === "A") {
+        t = "CTA";
+        ctaTagged = true;
+      }
+      if (!t && !stackTagged && sel.includes('"35"')) {
+        t = "STACK";
+        stackTagged = true;
+      }
+      out.push({ x: r.left, y: r.top, w: r.width, h: r.height, r: radius, kind, tag: t });
+    });
+  }
+  return out;
+}
+
+const EASE = [0.65, 0, 0.35, 1] as const;
 
 export function BuildIntro() {
   const pathname = usePathname();
-  const [phase, setPhase] = useState<"wait" | "build" | "dissolve" | "gone">(
+  const [phase, setPhase] = useState<"wait" | "build" | "fill" | "fade" | "gone">(
     pathname === "/" ? "wait" : "gone",
   );
+  const [pieces, setPieces] = useState<Piece[]>([]);
+  const [guides, setGuides] = useState({ left: 0, right: 0, header: 56, banner: 0 });
 
   useEffect(() => {
     if (phase !== "wait") return;
     const html = document.documentElement;
-    if (
-      html.hasAttribute("data-intro-done") ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
+    if (html.hasAttribute("data-intro-done") || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setPhase("gone");
       return;
     }
-    const onBuild = () => setPhase("build");
+    const onBuild = () => {
+      const banner = document.querySelector('main [data-reveal="unveil"]')?.getBoundingClientRect();
+      setGuides({
+        left: banner?.left ?? 0,
+        right: banner?.right ?? window.innerWidth,
+        header: document.querySelector("header")?.getBoundingClientRect().bottom ?? 56,
+        banner: banner?.bottom ?? 0,
+      });
+      setPieces(measure());
+      setPhase("build");
+    };
     document.addEventListener("site-intro:build", onBuild, { once: true });
-    // Safety: never leave it waiting if the loader somehow never hands over.
     const failsafe = window.setTimeout(() => setPhase("gone"), 9000);
     return () => {
       document.removeEventListener("site-intro:build", onBuild);
@@ -48,152 +102,214 @@ export function BuildIntro() {
     };
   }, [phase]);
 
-  // Build → hand over underneath (the page starts its own reveals while still
-  // covered) → dissolve into it once the real content is appearing.
   useEffect(() => {
-    if (phase !== "build") return;
-    const handOver = window.setTimeout(() => {
-      const html = document.documentElement;
-      html.classList.remove("intro-lock");
-      html.setAttribute("data-intro-done", "");
-      document.dispatchEvent(new Event("site-intro:done"));
-    }, 1100);
-    const dissolve = window.setTimeout(() => setPhase("dissolve"), 2250);
-    return () => {
-      window.clearTimeout(handOver);
-      window.clearTimeout(dissolve);
-    };
-  }, [phase]);
-
-  useEffect(() => {
-    if (phase !== "dissolve") return;
-    const t = window.setTimeout(() => setPhase("gone"), 750);
+    let t = 0;
+    if (phase === "build") {
+      t = window.setTimeout(() => {
+        // Content starts filling in underneath while the wireframe is still up.
+        const html = document.documentElement;
+        html.classList.remove("intro-lock");
+        html.setAttribute("data-intro-done", "");
+        document.dispatchEvent(new Event("site-intro:done"));
+        setPhase("fill");
+      }, 1700);
+    } else if (phase === "fill") {
+      t = window.setTimeout(() => setPhase("fade"), 750);
+    } else if (phase === "fade") {
+      t = window.setTimeout(() => setPhase("gone"), 550);
+    }
     return () => window.clearTimeout(t);
   }, [phase]);
 
   if (phase === "gone") return null;
-  const building = phase !== "wait";
-
-  // Each block gets the next slot in the build order.
-  let order = 0;
-  let tilesStart = 0;
-  const next = () => order++ * STEP;
+  const drawing = phase !== "wait";
+  const filled = phase === "fill" || phase === "fade";
+  const n = pieces.length;
+  const step = n > 0 ? Math.min(0.045, 1.05 / n) : 0.04;
+  const width = guides.right - guides.left;
 
   return (
-    <motion.div
+    <div
       data-build-intro
       aria-hidden
-      className="bg-grid fixed inset-0 z-[99] overflow-hidden bg-background"
-      // .bg-grid sets position: relative; the overlay must stay fixed over the page.
+      className="pointer-events-none fixed inset-0 z-[99] overflow-hidden"
       style={{ position: "fixed" }}
-      initial={{ opacity: 1 }}
-      animate={{ opacity: phase === "dissolve" ? 0 : 1 }}
-      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
     >
-      {/* Header row (mirrors the real sticky header) */}
-      <div className="border-b border-border/50">
-        <div className="mx-auto flex h-14 w-full max-w-(--portfolio-content-width) items-center justify-between px-5 sm:px-0">
-          <Block building={building} delay={next()} className="h-5 w-8 rounded-md" />
-          <div className="flex items-center gap-3 sm:gap-5">
-            <div className="hidden items-center gap-4 sm:flex sm:gap-5">
-              <Block building={building} delay={next()} className="h-3.5 w-10 rounded" />
-              <Block building={building} delay={next()} className="h-3.5 w-10 rounded" />
-              <Block building={building} delay={next()} className="h-3.5 w-14 rounded" />
-            </div>
-            <Block building={building} delay={next()} className="hidden h-8 w-24 rounded-full sm:block" />
-            <Block building={building} delay={next()} className="size-7 rounded-full" />
-            <Block building={building} delay={next()} className="size-7 rounded-full" />
-          </div>
-        </div>
-      </div>
+      {/* Blueprint ground: fades away so the real content shows through the outlines. */}
+      <motion.div
+        className="bg-grid absolute inset-0 bg-background"
+        style={{ position: "absolute" }}
+        initial={{ opacity: 1 }}
+        animate={{ opacity: filled ? 0 : 1 }}
+        transition={{ duration: 0.6, ease: EASE }}
+      />
 
-      {/* Hero (mirrors hero.tsx) */}
-      <div className="mx-auto w-full max-w-(--portfolio-content-width) px-5 pt-3 sm:px-0 sm:pt-4">
-        <div className="flex flex-col gap-5">
-          <Block building={building} delay={next()} className="h-[calc(var(--grid-cell-size)*4.5)] rounded-2xl" />
-          <div className="-mt-3 flex justify-end">
-            <Block building={building} delay={next()} className="h-3.5 w-28 rounded" />
-          </div>
-          <div className="-mt-[calc(var(--grid-cell-size)*2)] flex">
-            <div className="relative z-10 rounded-full bg-background p-1">
-              <Block building={building} delay={next()} className="size-24 rounded-full sm:size-28" />
-            </div>
-          </div>
-          <div>
-            <Block building={building} delay={next()} className="h-9 w-[min(70%,22rem)] rounded-lg" />
-            <Block building={building} delay={next()} className="mt-2.5 h-4 w-40 rounded" />
-            <div className="mt-3 flex gap-3">
-              <Block building={building} delay={next()} className="h-6 w-40 rounded-full" />
-              <Block building={building} delay={next()} className="h-6 w-28 rounded-full" />
-            </div>
-            <div className="mt-4 flex gap-2">
-              <Block building={building} delay={next()} className="h-8 w-32 rounded-full" />
-              <Block building={building} delay={next()} className="h-8 w-28 rounded-full" />
-              <Block building={building} delay={next()} className="h-8 w-24 rounded-full" />
-            </div>
-          </div>
-          <div className="max-w-xl space-y-2">
-            <Block building={building} delay={next()} className="h-3.5 w-full rounded" />
-            <Block building={building} delay={next()} className="h-3.5 w-[92%] rounded" />
-            <Block building={building} delay={next()} className="h-3.5 w-[60%] rounded" />
-          </div>
-          <div className="flex gap-2">
-            <Block building={building} delay={next()} className="size-6 rounded-md" />
-            <Block building={building} delay={next()} className="size-6 rounded-md" />
-            <Block building={building} delay={next()} className="size-6 rounded-md" />
-          </div>
-        </div>
-
-        {/* Toolbox */}
-        <div className="mt-12 sm:mt-16">
-          <Block building={building} delay={next()} className="h-3 w-20 rounded" />
-          <Block building={building} delay={next()} className="mt-2.5 h-7 w-56 rounded-lg" />
-          {(() => {
-            tilesStart = order * STEP;
-            return null;
-          })()}
-          <div className="mt-6 flex flex-wrap gap-3">
-            {Array.from({ length: TECH_TILES }, (_, i) => (
-              <Block key={i} building={building} className="size-[52px] rounded-xl" delay={tilesStart + i * 0.025} />
+      <motion.div
+        className="absolute inset-0"
+        initial={{ opacity: 1 }}
+        animate={{ opacity: phase === "fade" ? 0 : 1 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
+        {drawing && (
+          <>
+            {[guides.left, guides.right, (guides.left + guides.right) / 2].map((x, i) => (
+              <motion.span
+                key={`v${i}`}
+                className="bp-guide-v absolute top-0 h-full"
+                style={{ left: x, originY: 0 }}
+                initial={{ scaleY: 0 }}
+                animate={{ scaleY: 1 }}
+                transition={{ duration: 0.7, ease: EASE, delay: i * 0.08 }}
+              />
             ))}
-          </div>
-        </div>
-      </div>
+            {[guides.header, guides.banner].map((y, i) => (
+              <motion.span
+                key={`h${i}`}
+                className="bp-guide-h absolute left-0 w-full"
+                style={{ top: y, originX: 0 }}
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.7, ease: EASE, delay: 0.12 + i * 0.1 }}
+              />
+            ))}
+            <Label style={{ left: 16, bottom: 12 }} delay={0.1} text="build 001 · page.tsx" />
+            <Label
+              style={{ right: 16, bottom: 12 }}
+              delay={0.2}
+              text={filled ? "rendered ✓" : `compiling · ${n} nodes`}
+            />
+            {width > 0 && (
+              <Label
+                style={{ left: guides.left, width, top: guides.banner + 8, textAlign: "center" }}
+                delay={0.55}
+                text={`← ${Math.round(width)}px →`}
+              />
+            )}
+          </>
+        )}
 
-      {/* Light sweeping across the finished structure */}
-      {building && (
-        <motion.div
-          aria-hidden
-          className="build-shimmer pointer-events-none absolute inset-y-0 -left-1/3 w-1/3"
-          initial={{ x: "0%" }}
-          animate={{ x: "420%" }}
-          transition={{ duration: 0.9, delay: 1.25, ease: [0.45, 0, 0.25, 1] }}
-        />
-      )}
-    </motion.div>
+        {/* Wireframe of the real page */}
+        <svg className="absolute inset-0 size-full" aria-hidden>
+          <defs>
+            <pattern id="bp-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="7" className="bp-hatch-line" strokeWidth="1.2" />
+            </pattern>
+          </defs>
+          {drawing &&
+            pieces.map((p, i) => {
+              const d = 0.25 + i * step;
+              return (
+                <g key={i}>
+                  {p.kind === "text" && (
+                    <motion.rect
+                      x={p.x}
+                      y={p.y}
+                      width={p.w}
+                      height={p.h}
+                      rx={p.r}
+                      fill="url(#bp-hatch)"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: filled ? 0 : 0.9 }}
+                      transition={{ duration: 0.35, delay: filled ? 0 : d + 0.25 }}
+                    />
+                  )}
+                  <motion.rect
+                    x={p.x + 0.5}
+                    y={p.y + 0.5}
+                    width={Math.max(0, p.w - 1)}
+                    height={Math.max(0, p.h - 1)}
+                    rx={p.r}
+                    className="bp-stroke"
+                    fill="none"
+                    strokeWidth="1"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{
+                      pathLength: { duration: 0.55, ease: EASE, delay: d },
+                      opacity: { duration: 0.1, delay: d },
+                    }}
+                  />
+                  {p.kind === "image" &&
+                    [
+                      [p.x, p.y, p.x + p.w, p.y + p.h],
+                      [p.x + p.w, p.y, p.x, p.y + p.h],
+                    ].map(([x1, y1, x2, y2], k) => (
+                      <motion.line
+                        key={k}
+                        x1={x1}
+                        y1={y1}
+                        x2={x2}
+                        y2={y2}
+                        className="bp-stroke"
+                        strokeWidth="1"
+                        initial={{ pathLength: 0, opacity: 0.7 }}
+                        animate={{ pathLength: 1, opacity: filled ? 0 : 0.7 }}
+                        transition={{
+                          pathLength: { duration: 0.5, ease: EASE, delay: d + 0.35 + k * 0.08 },
+                          opacity: { duration: 0.3 },
+                        }}
+                      />
+                    ))}
+                  {p.kind === "circle" &&
+                    [0, 1].map((k) => {
+                      const cx = p.x + p.w / 2;
+                      const cy = p.y + p.h / 2;
+                      const o = (p.w / 2) * Math.SQRT1_2;
+                      const s = k ? -1 : 1;
+                      return (
+                        <motion.line
+                          key={k}
+                          x1={cx - o}
+                          y1={cy - s * o}
+                          x2={cx + o}
+                          y2={cy + s * o}
+                          className="bp-stroke"
+                          strokeWidth="1"
+                          initial={{ pathLength: 0, opacity: 0.7 }}
+                          animate={{ pathLength: 1, opacity: filled ? 0 : 0.7 }}
+                          transition={{
+                            pathLength: { duration: 0.4, ease: EASE, delay: d + 0.35 + k * 0.08 },
+                            opacity: { duration: 0.3 },
+                          }}
+                        />
+                      );
+                    })}
+                </g>
+              );
+            })}
+        </svg>
+
+        {drawing &&
+          pieces.map((p, i) =>
+            p.tag ? (
+              <motion.span
+                key={`t${i}`}
+                className="bp-tag absolute font-mono text-[9.5px] uppercase tracking-[0.14em]"
+                style={{ left: p.x, top: Math.max(2, p.y - 17) }}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: filled ? 0 : 1, y: 0 }}
+                transition={{ duration: 0.3, delay: filled ? 0 : 0.45 + i * step }}
+              >
+                {p.tag}
+                {p.kind === "image" ? ` · ${Math.round(p.w)}×${Math.round(p.h)}` : ""}
+              </motion.span>
+            ) : null,
+          )}
+      </motion.div>
+    </div>
   );
 }
 
-function Block({
-  className,
-  children,
-  delay,
-  building,
-}: {
-  className: string;
-  children?: ReactNode;
-  delay: number;
-  building: boolean;
-}) {
+function Label({ text, style, delay }: { text: string; style: CSSProperties; delay: number }) {
   return (
-    <motion.div
-      className={`build-block ${className}`}
-      style={{ willChange: "transform, opacity" }}
-      initial={{ opacity: 0, y: 46, scale: 0.94 }}
-      animate={building ? { opacity: 1, y: 0, scale: 1 } : undefined}
-      transition={{ ...RISE, delay, opacity: { duration: 0.35, delay } }}
+    <motion.span
+      className="bp-label absolute font-mono text-[10px] uppercase tracking-[0.2em]"
+      style={style}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4, delay }}
     >
-      {children}
-    </motion.div>
+      {text}
+    </motion.span>
   );
 }
