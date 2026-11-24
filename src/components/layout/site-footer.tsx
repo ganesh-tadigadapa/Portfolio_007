@@ -28,17 +28,15 @@ export function SiteFooter() {
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/25 to-transparent" />
       <Container className="pt-12 sm:pt-14">
         {/* Identity */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-md">
-            <p className="flex items-center gap-2.5 text-lg font-semibold tracking-tight">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-full border border-border bg-card/60">
               <YinYang />
-              {siteConfig.name}
-            </p>
-            <p className="mt-0.5 text-sm text-secondary">Full-Stack &amp; Cloud Engineer</p>
-            <p className="mt-3 text-[13.5px] leading-relaxed text-secondary">
-              B.Tech CSE at Lovely Professional University. Building full-stack products and the cloud
-              infrastructure behind them.
-            </p>
+            </span>
+            <div>
+              <p className="text-lg font-semibold leading-tight tracking-tight">{siteConfig.name}</p>
+              <p className="mt-0.5 text-sm text-secondary">Full-Stack &amp; Cloud Engineer</p>
+            </div>
           </div>
           <p className="inline-flex shrink-0 items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-[12px] font-medium text-emerald-600 dark:text-emerald-400">
               <span className="relative flex size-1.5">
@@ -49,7 +47,7 @@ export function SiteFooter() {
           </p>
         </div>
 
-        <div className="mt-10 grid grid-cols-2 gap-8 border-t border-border/60 pt-8 sm:grid-cols-[1fr_1fr_1.7fr]">
+        <div className="mt-8 grid grid-cols-2 gap-8 border-t border-border/60 pt-8 sm:grid-cols-[1fr_1fr_1.7fr]">
           {/* Navigate */}
           <div>
             <p className={heading}>Navigate</p>
@@ -112,7 +110,7 @@ export function SiteFooter() {
 
         <div className="mt-10 flex flex-col-reverse items-start gap-4 border-t border-border/60 py-6 text-[12.5px] text-secondary sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
+            © {new Date().getFullYear()} {siteConfig.name}
           </p>
           <BackToTop />
         </div>
