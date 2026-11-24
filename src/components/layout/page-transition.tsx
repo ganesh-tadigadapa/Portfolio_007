@@ -20,11 +20,12 @@ type Effect = "iris" | "doors" | "blinds";
 const EFFECTS: Record<string, Effect> = { "/": "iris", "/about": "doors", "/projects": "blinds" };
 
 const EVENT = "page-transition:go";
-const IN = 0.42; // seconds to close
-const OUT = 0.46; // seconds to open
+const IN = 0.32; // seconds to close
+const OUT = 0.42; // seconds to open
 const EASE_IN: Transition["ease"] = [0.65, 0, 0.35, 1];
 const EASE_OUT: Transition["ease"] = [0.22, 1, 0.36, 1];
 const SLATS = 7;
+const SLAT_STAGGER = 0.014;
 
 type Stage = "in" | "out";
 type Active = { effect: Effect; x: number; y: number; stage: Stage; id: number };
@@ -35,6 +36,17 @@ export function PageTransitionListener() {
   const [active, setActive] = useState<Active | null>(null);
   const waitingFor = useRef<string | null>(null);
 
+  // Fetch every curtain destination ahead of time, so the page is ready the moment
+  // the curtain closes (no wait on a click).
+  useEffect(() => {
+    const warm = () => Object.keys(EFFECTS).forEach((href) => router.prefetch(href));
+    const idle = window.requestIdleCallback?.(warm, { timeout: 2500 }) ?? window.setTimeout(warm, 1200);
+    return () => {
+      if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
+      else clearTimeout(idle);
+    };
+  }, [router]);
+
   useEffect(() => {
     const timers: number[] = [];
     const onGo = (e: Event) => {
@@ -44,7 +56,7 @@ export function PageTransitionListener() {
       router.prefetch(href);
       setActive({ effect: EFFECTS[href] ?? "blinds", x, y, stage: "in", id: Date.now() });
       // Fully closed (incl. the last slat's stagger) → swap the page underneath.
-      timers.push(window.setTimeout(() => router.push(href, { scroll: false }), IN * 1000 + 90));
+      timers.push(window.setTimeout(() => router.push(href, { scroll: false }), IN * 1000 + 30));
       // Safety net: never leave the curtain closed.
       timers.push(
         window.setTimeout(() => {
@@ -65,7 +77,7 @@ export function PageTransitionListener() {
   useEffect(() => {
     if (!waitingFor.current || pathname !== waitingFor.current) return;
     waitingFor.current = null;
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: "instant" });
     requestAnimationFrame(() =>
       requestAnimationFrame(() => setActive((a) => (a ? { ...a, stage: "out" } : a))),
     );
@@ -102,7 +114,7 @@ function Iris({ a, onDone }: { a: Active; onDone: () => void }) {
       style={{ left: a.x - r, top: a.y - r, width: r * 2, height: r * 2, willChange: "transform" }}
       initial={{ scale: 0 }}
       animate={{ scale: closing ? 1 : 0 }}
-      transition={{ duration: closing ? IN + 0.04 : OUT, ease: closing ? EASE_IN : EASE_IN }}
+      transition={{ duration: closing ? IN + 0.04 : OUT, ease: closing ? EASE_IN : EASE_OUT }}
       onAnimationComplete={() => !closing && onDone()}
     />
   );
@@ -155,7 +167,7 @@ function Blinds({ a, onDone }: { a: Active; onDone: () => void }) {
           transition={{
             duration: closing ? IN - 0.06 : OUT - 0.06,
             ease: closing ? EASE_IN : EASE_OUT,
-            delay: i * 0.018,
+            delay: i * SLAT_STAGGER,
           }}
           onAnimationComplete={() => !closing && i === SLATS - 1 && onDone()}
         />

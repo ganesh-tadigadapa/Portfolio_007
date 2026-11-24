@@ -132,7 +132,7 @@ export function ContributionSnake({
 
       const head = at(t);
       if (headRef.current) {
-        headRef.current.style.transform = `translate(${head.x}px, ${head.y}px)`;
+        headRef.current.style.transform = `translate3d(${head.x.toFixed(1)}px, ${head.y.toFixed(1)}px, 0)`;
       }
 
       let count = 0;
@@ -155,10 +155,12 @@ export function ContributionSnake({
         const x = home.x + (target.x - home.x) * ease;
         const y = home.y + (target.y - home.y) * ease;
         const fade = s > MAX_BODY - 4 ? (MAX_BODY - s) / 4 : 1;
-        seg.style.transform = `translate(${x}px, ${y}px) scale(${0.86 - s * 0.012})`;
+        seg.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${0.86 - s * 0.012})`;
         seg.style.opacity = String(fade);
         const fill = seg.firstElementChild as HTMLElement | null;
-        if (fill) fill.className = `size-full rounded-[3px] ${levelClasses[meal.level] ?? levelClasses[4]}`;
+        // Only touch the class when it changes (a write every frame forces style recalcs).
+        const cls = `size-full rounded-[3px] ${levelClasses[meal.level] ?? levelClasses[4]}`;
+        if (fill && fill.className !== cls) fill.className = cls;
       }
 
       if (count !== lastEaten) {

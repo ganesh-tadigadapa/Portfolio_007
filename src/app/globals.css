@@ -169,18 +169,6 @@ body {
 }
 
 
-/* Offscreen sections retain their HTML while the browser defers layout/painting. */
-main [data-scroll-section] {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 400px;
-  /* content-visibility clips to the box; leave room for elements that start
-     their reveal shifted down, or they never count as "on screen" */
-  overflow-clip-margin: 48px;
-}
-
-@media print {
-  main [data-scroll-section] { content-visibility: visible; }
-}
 
 /* ============================================================
    Site intro — kanji + 0–100% counter loader, then wipe upward
@@ -531,12 +519,13 @@ html.modal-lock body {
     0 0 40px rgb(0 0 0 / 0.35);
 }
 
-/* Name decode (decode-text.tsx): glyph cycles over a hidden real letter, which then
-   settles in with a short blur-to-sharp lift. */
+/* Name decode (decode-text.tsx): glyphs cycle over hidden real letters. A soft blue
+   scan runs just ahead of the resolving edge (glyphs brighten as it nears), and each
+   real letter settles in with a blur-to-sharp lift. */
 .decode-slot { position: relative; display: inline-block; }
 .decode-real { display: inline-block; }
 .decode-hidden { opacity: 0; }
-.decode-in { animation: decode-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.decode-in { animation: decode-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .decode-glyph {
   position: absolute;
   inset: 0;
@@ -546,11 +535,22 @@ html.modal-lock body {
   font-family: var(--font-mono);
   font-weight: 500;
   font-size: 0.82em;
-  color: color-mix(in oklch, var(--foreground) 38%, transparent);
+  color: color-mix(in oklch, var(--foreground) 62%, transparent);
+  transition: opacity 0.12s linear, color 0.15s linear, text-shadow 0.15s linear;
+}
+.decode-glyph-hot {
+  color: color-mix(in oklch, #1d9bf0 70%, var(--foreground));
+  text-shadow: 0 0 14px color-mix(in oklch, #1d9bf0 55%, transparent);
 }
 @keyframes decode-in {
-  from { opacity: 0; filter: blur(6px); transform: translateY(0.18em); }
-  to { opacity: 1; filter: blur(0); transform: none; }
+  0% {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(0.22em) scale(0.97);
+    color: color-mix(in oklch, #1d9bf0 70%, var(--foreground));
+  }
+  45% { opacity: 1; }
+  100% { opacity: 1; filter: blur(0); transform: none; color: inherit; }
 }
 
 /* Project cards (spotlight-card.tsx): a soft light that follows the cursor, and a

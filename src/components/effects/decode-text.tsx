@@ -15,8 +15,9 @@ const GLYPHS = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
 const CYCLE_MS = 70; // how often an unrevealed letter changes
 const STAGGER_MS = 45; // gap between letters resolving
 const LEAD_MS = 220; // scramble time before the first letter resolves
+const HEAT_MS = 260; // how far ahead of the resolving edge glyphs start to brighten
 
-type State = { revealed: boolean; glyph: string };
+type State = { revealed: boolean; glyph: string; heat: number };
 
 export function DecodeText({ text }: { text: string }) {
   const letters = [...text];
@@ -26,7 +27,9 @@ export function DecodeText({ text }: { text: string }) {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const rand = () => GLYPHS[Math.floor(Math.random() * GLYPHS.length)]!;
-    const scrambled = () => letters.map((ch) => ({ revealed: ch === " ", glyph: rand() }));
+    const scrambled = (): State[] => letters.map((ch) => ({ revealed: ch === " ", glyph: rand(), heat: 0 }));
+    // How close a letter is to resolving: 0 far away → 1 at its turn. Drives the scan glow.
+    const heatAt = (i: number, t: number) => Math.max(0, Math.min(1, 1 - (LEAD_MS + i * STAGGER_MS - t) / HEAT_MS));
 
     const run = () => {
       let start = 0;
@@ -40,7 +43,7 @@ export function DecodeText({ text }: { text: string }) {
           if (s.revealed) return s;
           if (t >= LEAD_MS + i * STAGGER_MS) {
             changed = true;
-            return { revealed: true, glyph: letters[i]! };
+            return { revealed: true, glyph: letters[i]!, heat: 1 };
           }
           return s;
         });
@@ -48,7 +51,7 @@ export function DecodeText({ text }: { text: string }) {
           lastCycle = now;
           changed = true;
           next.forEach((s, i) => {
-            if (!s.revealed) next[i] = { revealed: false, glyph: rand() };
+            if (!s.revealed) next[i] = { revealed: false, glyph: rand(), heat: heatAt(i, t) };
           });
         }
         if (changed) {
@@ -92,7 +95,14 @@ export function DecodeText({ text }: { text: string }) {
               <span className={s.revealed ? "decode-real decode-in" : "decode-real decode-hidden"}>
                 {ch === " " ? " " : ch}
               </span>
-              {!s.revealed && <span className="decode-glyph">{s.glyph}</span>}
+              {!s.revealed && (
+                <span
+                  className={s.heat > 0.55 ? "decode-glyph decode-glyph-hot" : "decode-glyph"}
+                  style={{ opacity: 0.6 + 0.4 * s.heat }}
+                >
+                  {s.glyph}
+                </span>
+              )}
             </span>
           );
         })}
