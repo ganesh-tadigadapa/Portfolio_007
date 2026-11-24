@@ -531,18 +531,18 @@ html.modal-lock body {
     0 0 40px rgb(0 0 0 / 0.35);
 }
 
-/* Blueprint construction intro (build-intro.tsx). */
-.bp-stroke { stroke: color-mix(in oklch, var(--foreground) 55%, transparent); }
-.bp-hatch-line { stroke: color-mix(in oklch, var(--foreground) 22%, transparent); }
-.bp-guide-v { width: 1px; background: repeating-linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 22%, transparent) 0 4px, transparent 4px 9px); }
-.bp-guide-h { height: 1px; background: repeating-linear-gradient(to right, color-mix(in oklch, var(--foreground) 22%, transparent) 0 4px, transparent 4px 9px); }
-.bp-label { color: color-mix(in oklch, var(--foreground) 45%, transparent); }
-.bp-tag {
-  padding: 1px 5px;
-  border-radius: 3px;
-  background: var(--foreground);
-  color: var(--background);
-}
+/* Compile intro (build-intro.tsx): the page renders from its own JSX. */
+.compile-ground { fill: var(--background); }
+.compile-code { color: color-mix(in oklch, var(--foreground) 70%, transparent); }
+.compile-tag { color: color-mix(in oklch, var(--foreground) 92%, transparent); }
+.compile-attr { color: color-mix(in oklch, var(--foreground) 55%, transparent); }
+.compile-str { color: #34d399; }
+.compile-expr { color: #a78bfa; }
+.compile-text { color: color-mix(in oklch, var(--foreground) 75%, transparent); }
+.compile-status { color: color-mix(in oklch, var(--foreground) 50%, transparent); }
+.compile-accent { color: #34d399; }
+:root:not(.dark) .compile-str, :root:not(.dark) .compile-accent { color: #059669; }
+:root:not(.dark) .compile-expr { color: #7c3aed; }
 
 /* Sun/moon swap: the new icon spins and grows in. */
 @keyframes theme-icon-in {
