@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "Ganesh Tadigadapa",
-  title: "Ganesh Tadigadapa | Full-Stack, Cloud & DevOps Engineer",
+  title: "Ganesh Tadigadapa | Software Engineer · Full-Stack, Cloud & DevOps",
   description:
     "Portfolio of Ganesh Tadigadapa. Building full-stack products, cloud infrastructure on AWS, distributed systems in Go, and AI-powered tools.",
   // The live address: used for the sitemap, canonical links and share previews.

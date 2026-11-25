@@ -35,7 +35,7 @@ export function SiteFooter() {
             </span>
             <div>
               <p className="text-lg font-semibold leading-tight tracking-tight">{siteConfig.name}</p>
-              <p className="mt-0.5 text-sm text-secondary">Full-Stack &amp; Cloud Engineer</p>
+              <p className="mt-0.5 text-sm text-secondary">Software Engineer · Full-Stack &amp; Cloud</p>
             </div>
           </div>
           <p className="inline-flex shrink-0 items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-[12px] font-medium text-emerald-600 dark:text-emerald-400">

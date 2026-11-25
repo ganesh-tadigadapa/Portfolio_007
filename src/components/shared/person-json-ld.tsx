@@ -12,7 +12,7 @@ export function PersonJsonLd() {
     name: heroConfig.name,
     url: siteConfig.url,
     image: `${siteConfig.url}${heroConfig.avatar}`,
-    jobTitle: "Full-Stack, Cloud & DevOps Engineer",
+    jobTitle: "Software Engineer",
     description: siteConfig.description,
     email: heroConfig.email,
     address: {

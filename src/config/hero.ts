@@ -29,6 +29,7 @@ export const socialLinks = [
 
 // The titles that rotate under the name in the hero.
 export const rotatingTitles = [
+  "Software Engineer",
   "Full Stack Developer",
   "Cloud & DevOps Enthusiast",
   "Curious Builder",
